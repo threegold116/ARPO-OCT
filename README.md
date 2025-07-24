@@ -33,12 +33,12 @@
 ## 📣 Latest News
 
 - **[June 6, 2025]**: We released more lightweight checkpoints of Tool-Star . Checkout **[🤗Tool-Star-Qwen-0.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B)** & **[🤗Tool-Star-Qwen-1.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B)** here.
-- **[May 21, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
-- **[May 21, 2025]**: **[🤗 Tool-Star Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. We will keep update it!
-- **[May 21, 2025]**: 🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoning. Checkout **[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[Multi-Tool-RL-10K](https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K)** here.
-- **[May 21, 2025]**: 🔥 We released our Tool-Star-Qwen-3B checkpoint. Checkout **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** here.
-- **[May 21, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/pdf/2505.16410)** and **[Hugging Face](https://huggingface.co/papers/2505.16410)** daily paper.
-- **[May 21, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
+- **[Jul 25, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
+- **[Jul 25, 2025]**: **[🤗 Tool-Star Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. We will keep update it!
+- **[Jul 25, 2025]**: 🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoning. Checkout **[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[Multi-Tool-RL-10K](https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K)** here.
+- **[Jul 25, 2025]**: 🔥 We released our ARPO checkpoint. Checkout **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** here.
+- **[Jul 25, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/pdf/2505.16410)** and **[Hugging Face](https://huggingface.co/papers/2505.16410)** daily paper.
+- **[Jul 25, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
 
 
 ## :mag_right: Roadmap
@@ -76,21 +76,9 @@ Tool-star is still under development and there are many issues and room for impr
 ## 💡 Overview
 
 
-**Tool-Star** is a **reinforcement learning-based framework** designed to empower LLMs to autonomously invoke **multiple external tools** during stepwise reasoning. Specifically, Tool-Star integrates six types of tools into the reasoning process (three for training and three for inference-time optimization) and incorporates systematic designs in both data synthesis and training algorithms.
-
-<p align="center">
-<img width="100%" alt="image" src="https://github.com/user-attachments/assets/edb21f58-7a18-47b9-8b1c-9522f7c9c56d" />
-</p>
-
 ---
 
 ### 📊 Overall Performance
-As shown below, Tool-Star demonstrates strong overall reasoning performance across more than **10** challenging computational reasoning tasks (e.g., AIME24 and MATH500) and knowledge-intensive reasoning tasks (e.g., WebWalker and HotpotQA), while ensuring both efficiency and reliability in tool usage.
-
-
-<p align="center">
-<img width="100%" alt="image" src="https://github.com/user-attachments/assets/5f60be15-6992-413e-a405-a72e3b352fc1" />
-</p>
 
 
 
@@ -104,8 +92,15 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 In this step, we will describe how to perform a cold start for the SFT stage using the LLaMA Factory repository. First, set up the environment as follows:
 
 ```bash
+# Clone the ARPO repository (which includes LLaMA-Factory)
 git clone https://github.com/dongguanting/ARPO
 cd ARPO/LLaMA-Factory
+
+# Create a new conda environment
+conda create -n sft python=3.10
+conda activate sft
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
@@ -270,22 +265,9 @@ python /Tool_Star_RL/model_merger.py \
 ```
 
 
-### 3. Self-Critic DPO Training (Optional)
-
-In our experiments, completing SFT + Vanilla RL has been sufficient to almost reproduce Tool-Star's performance (refer to the ablation study).
-
-If you wish to proceed with Self-Critic DPO training, please refer to the training algorithm in **Appendix B.1** of the paper and the data format process in **Appendix E.2**. You can self-sample reward data using the saved checkpoints for RL and SFT training data. We also provide DPO training code based on [Llama Factory](https://github.com/hiyouga/LLaMA-Factory) for your reference.
-
-Please complete the path information in `LLaMA-Factory-main/examples/train_lora/qwen_lora_dpo_2.yaml` and place the synthesized DPO data in `LLaMA-Factory-main/data/`. You can then run the following script for training:
-
-```bash
-cd LLaMA-Factory-main
-bash ./examples/train_lora/train_dpo.sh
-```
-
 ---
 
-## ✅ TIR Evaluation
+## ✅ ARPO Evaluation
 
 If you have already trained a model, you can refer to the following process for TIR capability evaluation. Of course, you can also download our checkpoint **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** for directly testing.
 This guide walks you through setting up two separate environments:
@@ -411,16 +393,9 @@ bash evaluation/evaluate_passk.sh
 ```
 ---
 
-## 📄 Performance of Tool-Star Models
+## 📄 Performance of ARPO Models
 
-We present the results of our Tool-Star model checkpoints with sizes 0.5B, 1.5B, 3B, and 7B, all based on the Qwen2.5-Instruct series. The results of **“Self-Critic-RL”** setting correspond to our series of 🤗 open-source huggingface model checkpoints.
-
-<p align="center">
-<img width="100%" alt="image" src="https://github.com/user-attachments/assets/108d51c1-d4ff-4045-b9cb-5829dded97da" />
-</p>
-
-
-
+We present the results of our ARPO model checkpoints with sizes 8B and 14B, all based on the Qwen2.5-Instruct series. The results of **“Self-Critic-RL”** setting correspond to our series of 🤗 open-source huggingface model checkpoints.
 
 ## 📄 Citation
 
