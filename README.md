@@ -101,12 +101,12 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 
 ### 1. Environment Setup
 
-In this step, we will describe how to perform a cold start for the SFT stage using the Llama Factory repository. Please first set up the environment for [Llama Factory](https://github.com/hiyouga/LLaMA-Factory).
+In this step, we will describe how to perform a cold start for the SFT stage using the LLaMA Factory repository. First, set up the environment as follows:
 
 ```bash
 git clone https://github.com/dongguanting/ARPO
 cd ARPO/LLaMA-Factory
-pip install -e ".[metrics]"
+pip install -r requirements.txt
 ```
 
 ### 2. Fine-Tuning Model
@@ -350,19 +350,22 @@ pip install -r requirements.txt
 Edit the `infer_local_sds.sh` script with the following values:
 
 ```bash
+# Datasets to evaluate — uncomment the ones you want to include:
+# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
 data_names=(
-  "hle"
-  "gaia"
+    "hle"
+    "gaia"
 )
 
-EXP_NAME="<your_exp_name>"
-MODEL_PATH="<path/to/reasoning_model>"
-OUTPUT_PATH="<your/output/path>"
-CONDA_PATH="<your/conda/path>"
-CONDA_ENV="evaluation"
-BING_API_KEY="<your_bing_api_key>"
-BING_ZONE="<your_bing_zone>"
-SUMM_MODEL_PATH="<path/to/summarization_model>"
+# Required parameters to update:
+EXP_NAME="<your_exp_name>"                   # Name of this experiment run
+MODEL_PATH="<your_model_path>"               # Path to the reasoning model
+OUTPUT_PATH="<your_output_path>"             # Directory to save outputs
+CONDA_PATH="<your_conda_path>"               # Path to your Conda installation
+CONDA_ENV="<your_env_name>"                  # Name of your Conda environment
+BING_API_KEY="<your_bing_search_api_key>"    # Bing Search API key
+BING_ZONE="<your_bing_zone>"                 # Bing API zone
+SUMM_MODEL_PATH="<your_summarization_model_path>"  # Path to summarization model checkpoints
 ```
 
 Run the evaluation:
