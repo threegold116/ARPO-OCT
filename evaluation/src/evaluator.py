@@ -30,17 +30,17 @@ class Evaluator:
         sigma: float = 0.1
     ):
         """
-        初始化评测器
+        Initialize evaluator.
 
         Args:
-            task_type: 任务类型 ('math', 'qa')
-            output_path: 模型输出JSON文件路径
-            use_llm: 是否使用LLM评估
-            api_base_url: LLM API基础URL
-            model_name: LLM模型名称
-            api_key: API密钥
-            concurrent_limit: 并发限制
-            sigma: 平滑因子
+            task_type: Task type ('math', 'qa')
+            output_path: Path to the model output JSON file
+            use_llm: Whether to use LLM for evaluation
+            api_base_url: Base URL for LLM API
+            model_name: Name of the LLM model
+            api_key: API key
+            concurrent_limit: Concurrency limit
+            sigma: Smoothing factor
         """
         self.task_type = task_type
         self.output_path = output_path
@@ -48,12 +48,12 @@ class Evaluator:
         self.concurrent_limit = concurrent_limit
         self.sigma = sigma
 
-        # 输出路径
+        # Output paths
         base_path, ext = os.path.splitext(output_path)
         self.output_metrics_path = f"{base_path}_metrics.json"
         self.output_metrics_overall_path = f"{base_path}_metrics_overall.json"
 
-        # 如果需要LLM评估，则初始化LLM评估器
+        # Initialize LLM evaluator if needed
         self.llm_evaluator = None
         if self.use_llm:
             self.llm_evaluator = LLMEvaluator(
@@ -65,24 +65,20 @@ class Evaluator:
 
     async def evaluate_sample(self, item: Dict[str, Any]) -> Dict[str, Any]:
         """
-        评估单个样本
+        Evaluate a single sample.
 
         Args:
-            item: 样本数据
+            item: Sample data
 
         Returns:
-            指标
+            Evaluation metrics
         """
         question = item.get('input', '')
         answer = item.get('answer', '')
         prediction = item.get('prediction', '')
         output = item.get('output', '')
-        # question = item.get('query', '')
-        # answer = item.get('answer', '')
-        # prediction = item.get('predict', '')
-        # output = item.get('response', '')
 
-        # 如果提取的答案为空，使用输出的最后几行
+        # If prediction is empty, extract from the last few lines of output
         if not prediction:
             if output:
                 prediction = '\n'.join(output.replace(
@@ -91,7 +87,7 @@ class Evaluator:
                 prediction = ''
         
         if not prediction:
-            # 全部的指标都为0
+            # Return zero metrics if prediction is empty
             metrics = {
                 "is_valid_answer": False,
                 "em": 0,
@@ -103,23 +99,21 @@ class Evaluator:
                 "search_calls": 0,
                 "output_length": 0
             }
-            
-            # 设置工具使用指标
+            # Set tool usage stats
             python_calls = metrics["python_calls"]
             search_calls = metrics["search_calls"]
             metrics["tools_used"] = ("both" if python_calls and search_calls else
                              "python" if python_calls else
                              "search" if search_calls else "none")
             metrics["tool_counts"] = python_calls + search_calls
-            
             return metrics
 
-        # 初始化指标字典
+        # Initialize metrics
         metrics = {
             "is_valid_answer": prediction != ''
         }
 
-        # 工具调用统计分析
+        # Tool usage statistics
         python_calls = count_valid_tags(output, "python")
         search_calls = count_valid_tags(output, "search")
 
@@ -132,23 +126,20 @@ class Evaluator:
             "tool_counts": python_calls + search_calls
         })
 
-        # 响应长度统计分析
+        # Output length
         metrics["output_length"] = len(remove_result_tags(output))
 
-        # 根据任务类型进行评估
+        # Evaluate based on task type
         if self.task_type == 'math':
-            # 数学类评估
             math_metrics = evaluate_math_prediction(prediction, answer)
             metrics.update(math_metrics)
-
         elif self.task_type == 'qa':
-            # QA类评估
             qa_metrics = evaluate_qa_prediction(prediction, answer)
             metrics.update(qa_metrics)
         else:   
             raise ValueError(f"Unsupported task type: {self.task_type}")
 
-        # LLM评估
+        # LLM evaluation
         if self.use_llm and self.llm_evaluator:
             semaphore = asyncio.Semaphore(self.concurrent_limit)
             is_correct, llm_reason_answer = await self.llm_evaluator.evaluate(
@@ -164,15 +155,14 @@ class Evaluator:
 
     async def evaluate_batch(self, data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
-        批量评估样本
+        Evaluate a batch of samples.
 
         Args:
-            data: 样本数据列表
+            data: List of sample data
 
         Returns:
-            更新后的样本数据列表，包含评估指标
+            Updated sample list with evaluation metrics
         """
-        # 使用信号量控制并发
         semaphore = asyncio.Semaphore(self.concurrent_limit)
         
         async def _evaluate_with_semaphore(item):
@@ -182,82 +172,64 @@ class Evaluator:
                 item_copy['metrics'] = metrics
                 return item_copy
         
-        # 显示进度
         tasks = [_evaluate_with_semaphore(item) for item in data]
-        results = await async_tqdm.gather(*tasks, desc="评估样本")
-        
+        results = await async_tqdm.gather(*tasks, desc="Evaluating samples")
         return results
 
     async def run(self, data: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        运行评估流程
+        Run the evaluation process.
 
         Args:
-            data: 样本数据列表
+            data: List of sample data
 
         Returns:
-            整体评估指标
+            Overall evaluation metrics
         """
-        print(f"开始评估 {len(data)} 个样本，任务类型: {self.task_type}")
-
-        # 批量评估样本
+        print(f"Starting evaluation of {len(data)} samples, task type: {self.task_type}")
         updated_data = await self.evaluate_batch(data)
-
-        # 计算整体指标
         self.overall_metrics = self.calculate_overall_metrics(updated_data)
-
-        # 添加元信息
         self.overall_metrics['datetime'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # 保存结果
         self.save_results(updated_data)
-
         return self.overall_metrics
 
     def calculate_overall_metrics(self, data: List[Dict[str, Any]]) -> Dict[str, Union[float, str]]:
         """
-        计算整体评估指标
-        
+        Calculate overall evaluation metrics.
+
         Args:
-            data: 包含评估指标的样本数据列表
-            
+            data: Sample list with individual metrics
+
         Returns:
-            整体评估指标字典
+            Dictionary of overall metrics
         """
-        # 提取各项指标
         num_valid_answer = sum(item['metrics']['is_valid_answer'] for item in data)
-        
-        # 收集各指标的列表
         avg_em = [item['metrics'].get('em', 0) for item in data if 'em' in item['metrics']]
         avg_acc = [item['metrics'].get('acc', 0) for item in data if 'acc' in item['metrics']]
         avg_f1 = [item['metrics'].get('f1', 0) for item in data if 'f1' in item['metrics']]
         avg_math = [item['metrics'].get('math_equal', 0) for item in data if 'math_equal' in item['metrics']]
         avg_llm = [item['metrics'].get('llm_equal', 0) for item in data if 'llm_equal' in item['metrics']]
-        
-        # 工具使用统计
         avg_tool_counts = [item['metrics'].get('tool_counts', 0) for item in data]
         avg_python_calls = [item['metrics'].get('python_calls', 0) for item in data]
         avg_search_calls = [item['metrics'].get('search_calls', 0) for item in data]
         
         tool_usage_rate = sum(1 for count in avg_tool_counts if count > 0) / len(data) if data else 0
         avg_tool_count = np.mean(avg_tool_counts) if avg_tool_counts else 0
-        
-        # 根据任务类型计算相关指标
+
         if self.task_type == 'math':
             accuracy = np.mean(avg_math) if avg_math else 0.0
         elif self.task_type == 'qa':
             accuracy = np.mean(avg_f1) if avg_f1 else 0.0
         else:
             accuracy = 0.0
-            
-        # 计算工具生产力 (准确率 * 工具使用率 / (工具使用率 + sigma))
+
         if self.use_llm and avg_llm:
             final_accuracy = np.mean(avg_llm)
         else:
             final_accuracy = accuracy
-            
+
         final_tool_productivity = final_accuracy * avg_tool_count / (avg_tool_count + self.sigma) * 100.0
-        
+
         overall_metrics = {
             'em': np.mean(avg_em) if avg_em else 0.0,
             'acc': np.mean(avg_acc) if avg_acc else 0.0,
@@ -276,27 +248,24 @@ class Evaluator:
 
     def save_results(self, data: List[Dict[str, Any]]):
         """
-        保存评估结果
+        Save evaluation results.
 
         Args:
-            data: 更新后的样本数据列表
+            data: Updated list of sample data
         """
-        # 保存详细指标
         with open(self.output_metrics_path, mode='w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
 
-        # 保存整体指标
         with open(self.output_metrics_overall_path, mode='w', encoding='utf-8') as f:
             json.dump(self.overall_metrics, f, indent=4, ensure_ascii=False)
 
-        print(f"评估完成，结果已保存")
-        print(f"详细指标: {self.output_metrics_path}")
-        print(f"整体指标: {self.output_metrics_overall_path}")
+        print("Evaluation complete. Results saved.")
+        print(f"Detailed metrics: {self.output_metrics_path}")
+        print(f"Overall metrics: {self.output_metrics_overall_path}")
 
-        # 打印主要指标
         print(f"EM: {self.overall_metrics.get('em', 0):.4f}")
         print(f"F1: {self.overall_metrics.get('f1', 0):.4f}")
-        print(f"有效回答数: {self.overall_metrics.get('num_valid_answer', '0')}")
+        print(f"Valid answers: {self.overall_metrics.get('num_valid_answer', '0')}")
         
         if self.task_type == 'math':
             print(f"Math Equal: {self.overall_metrics.get('math_equal', 0):.4f}")
@@ -304,16 +273,15 @@ class Evaluator:
         if 'llm_equal' in self.overall_metrics:
             print(f"LLM Equal: {self.overall_metrics['llm_equal']:.4f}")
         
-        # 打印工具使用相关指标
-        print(f"平均工具调用次数: {self.overall_metrics.get('tool_call', 0):.2f}")
-        print(f"Python调用次数: {self.overall_metrics.get('average_python_calls', 0):.2f}")
-        print(f"搜索调用次数: {self.overall_metrics.get('average_search_calls', 0):.2f}")
-        print(f"使用工具的样本比例: {self.overall_metrics.get('average_datas_used_tool_number', 0):.2f}")
-        print(f"工具生产力指标(M1*M2): {self.overall_metrics.get('tool_productivity', 0):.2f}")
+        print(f"Avg tool calls: {self.overall_metrics.get('tool_call', 0):.2f}")
+        print(f"Python calls: {self.overall_metrics.get('average_python_calls', 0):.2f}")
+        print(f"Search calls: {self.overall_metrics.get('average_search_calls', 0):.2f}")
+        print(f"Tool usage rate: {self.overall_metrics.get('average_datas_used_tool_number', 0):.2f}")
+        print(f"Tool productivity (M1*M2): {self.overall_metrics.get('tool_productivity', 0):.2f}")
 
 
 def count_valid_tags(text: str, tag: str) -> int:
-    """统计有效成对标签数量"""
+    """Count valid paired tags."""
     count = 0
     current_pos = 0
 
@@ -321,12 +289,10 @@ def count_valid_tags(text: str, tag: str) -> int:
         start_tag = f"<{tag}>"
         end_tag = f"</{tag}>"
 
-        # 查找起始标签
         start_pos = text.find(start_tag, current_pos)
         if start_pos == -1:
             break
 
-        # 查找对应的结束标签
         end_pos = text.find(end_tag, start_pos + len(start_tag))
         if end_pos == -1:
             break
@@ -338,16 +304,14 @@ def count_valid_tags(text: str, tag: str) -> int:
 
 
 def remove_result_tags(text: str) -> str:
-    """移除结果标签内的内容"""
+    """Remove content inside result tags."""
     if not text:
         return ""
-    # 移除<r>标签
     cleaned_text = re.sub(r'<r>.*?</r>', '', text, flags=re.DOTALL)
-    # 移除<result>标签
     cleaned_text = re.sub(r'<result>.*?</result>', '', cleaned_text, flags=re.DOTALL)
     return cleaned_text.strip()
 
-# 为兼容性保留旧函数，但使用新的实现
+# Compatibility alias for older versions
 def remove_r_tags(text: str) -> str:
-    """兼容性函数"""
+    """Compatibility function."""
     return remove_result_tags(text)
