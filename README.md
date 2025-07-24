@@ -312,9 +312,15 @@ In this step, we will use the VLLM framework to deploy additional large language
 For the specific deployment, you can refer to the following script.
 
 ```bash
-cd evaluation
-bash vllm_server.sh
+cd evaluation/vllm_scripts
 ```
+Start the inference model
+
+```bash
+vllm_launch_reasoning_model_cuda4-7.sh
+```
+
+Start the inference model
 
 ### 3. Retriever Serving Deployment
 
