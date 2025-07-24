@@ -405,7 +405,7 @@ Then, run the evaluation script to calculate metrics:
 
 ```bash
 bash evaluation/evaluate_passk.sh
-
+```
 ---
 
 ## 📄 Performance of Tool-Star Models
