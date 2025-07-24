@@ -323,15 +323,23 @@ MODEL_PATH="< path/to/your/checkpoints >"
 MODEL_NAME="your_model_name"
 ```
 
-Choose the summarization model you want to use and edit the corresponding script.
+In the summarization model scripts (choose the one you plan to use), e.g.:
+```bash
+vllm_launch_summarize_model_cuda0-3_qwen3_8b.sh  
+vllm_launch_summarize_model_cuda0-3_qweb3_14b.sh
+...
+```
+Make sure to update the same variables MODEL_PATH and MODEL_NAME in the corresponding summarization script.
 
-Start the inference model
+#Start the inference model
+
+Choose the summarization model you want to use and run the corresponding script:
 
 ```bash
 bash vllm_launch_reasoning_model_cuda4-7.sh
 ```
 
-Start the summarization model
+#Start the summarization model
 ```bash
 bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
 ```
