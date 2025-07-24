@@ -288,116 +288,90 @@ bash ./examples/train_lora/train_dpo.sh
 ## ✅ TIR Evaluation
 
 If you have already trained a model, you can refer to the following process for TIR capability evaluation. Of course, you can also download our checkpoint **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** for directly testing.
+This guide walks you through setting up two separate environments:
+- One for **vLLM inference service** (`vllm_env`)
+- One for **evaluation pipeline** (`evaluation`)
 
-### 1. Environment Setup
+### 1. Setup vLLM Inference Environment
 
 ```bash
-# Create conda environment
-conda create -n tool_star python=3.10
-conda activate tool_star
+# Step into the vllm_scripts directory
+cd evaluation/vllm_scripts
 
-# Install requirements
-cd Tool-Star-main
+# Create a dedicated conda environment for vLLM
+conda create -n vllm_env python=3.10
+conda activate vllm_env
+
+# Install dependencies (edit as needed)
 pip install -r requirements.txt
 ```
 
-### 2. LLM Service Deployment
+Edit the following launch scripts with your own model paths and names:
 
-In this step, we will use the VLLM framework to deploy additional large language models (LLMs). This includes deploying an LLM as a judging model to evaluate the accuracy of the generated answers in the subsequent steps, as well as deploying inference-time tools such as code debugging and chain refinement.
-
-- We use Qwen2.5-72B-Instruct as the judging model.
-
-- We use Qwen2.5-3B-Instruct, which has the same parameter scale as the base model, as the foundation for the inference-time tools.
-
-For the specific deployment, you can refer to the following script.
-
+In `vllm_launch_reasoning_model_cuda4-7.sh`:
 ```bash
-cd evaluation/vllm_scripts
-```
-First, replace the MODEL_NAME and MODEL_PATH with your own in the following files:
-
-In `vllm_scipts/vllm_launch_reasoning_model_cuda4-7.sh`:
-
-```bash
-MODEL_PATH="< path/to/your/checkpoints >"
+MODEL_PATH="<path/to/your/reasoning_model_checkpoint>"
 MODEL_NAME="your_model_name"
 ```
 
-In the summarization model scripts (choose the one you plan to use), e.g.:
+For summarization models (choose one):
 ```bash
-vllm_launch_summarize_model_cuda0-3_qwen3_8b.sh  
-vllm_launch_summarize_model_cuda0-3_qweb3_14b.sh
-...
+MODEL_PATH="<path/to/your/summarization_model_checkpoint>"
+MODEL_NAME="your_summarization_model_name"
 ```
-Make sure to update the same variables MODEL_PATH and MODEL_NAME in the corresponding summarization script.
 
-**Start the inference model**
-
-Choose the summarization model you want to use and run the corresponding script:
-
+Launch the vLLM services:
 ```bash
+# Start the reasoning model
 bash vllm_launch_reasoning_model_cuda4-7.sh
+
+# Start the summarization model (choose one)
+bash vllm_launch_summarize_model_cuda0-3_<your_model>.sh
 ```
 
-**Start the summarization model**
+---
+
+### 2. Setup Evaluation Environment
+
 ```bash
-bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
+# Create a separate environment for evaluation
+conda create -n evaluation python=3.10
+conda activate evaluation
+
+# Install required packages
+cd evaluation
+pip install -r requirements.txt
 ```
 
+---
 
-### 3. Retriever Serving Deployment
+### 3. Configure and Run Evaluation
 
-In this section, we will deploy the retriever for performing search tasks on Wikipedia-based datasets. We provide a Wikipedia retriever service implemented using FlashRAG and FastAPI. Before starting the retriever serving, you need to download the [pre-indexed Wikipedia](https://github.com/RUC-NLPIR/FlashRAG?tab=readme-ov-file#index), [Wikipedia corpus, and corresponding retriever models](https://github.com/RUC-NLPIR/FlashRAG/blob/main/docs/original_docs/reproduce_experiment.md#preliminary). The corpuses used can be found [here](https://huggingface.co/datasets/RUC-NLPIR/FlashRAG_datasets/tree/main/retrieval-corpus), and Index construction method can be found [here](https://github.com/RUC-NLPIR/FlashRAG/tree/main?tab=readme-ov-file#rocket-quick-start).
-
-
-To start the inference pipeline, first update the necessary fields in evaluation/infer_local_sds.sh:
+Edit the `infer_local_sds.sh` script with the following values:
 
 ```bash
-# Datasets to evaluate — uncomment the ones you want to include:
-# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
 data_names=(
-    "hle"
-    "gaia"
+  "hle"
+  "gaia"
 )
 
-# Required parameters to update:
-EXP_NAME="<your_exp_name>"                   # Name of this experiment run
-MODEL_PATH="<your_model_path>"               # Path to the reasoning model
-OUTPUT_PATH="<your_output_path>"             # Directory to save outputs
-CONDA_PATH="<your_conda_path>"               # Path to your Conda installation
-CONDA_ENV="<your_env_name>"                  # Name of your Conda environment
-BING_API_KEY="<your_bing_search_api_key>"    # Bing Search API key
-BING_ZONE="<your_bing_zone>"                 # Bing API zone
-SUMM_MODEL_PATH="<your_summarization_model_path>"  # Path to summarization model checkpoints
+EXP_NAME="<your_exp_name>"
+MODEL_PATH="<path/to/reasoning_model>"
+OUTPUT_PATH="<your/output/path>"
+CONDA_PATH="<your/conda/path>"
+CONDA_ENV="evaluation"
+BING_API_KEY="<your_bing_api_key>"
+BING_ZONE="<your_bing_zone>"
+SUMM_MODEL_PATH="<path/to/summarization_model>"
 ```
-Once you have filled in the above fields, start the inference by running:
 
+Run the evaluation:
 ```bash
 bash evaluation/infer_local_sds.sh
 ```
-> 🔸 **Note:** If you are evaluating the `xbench` dataset, we recommend using the alternative script `infer_local_sds_cn.sh`, which adopts Chinese prompts and uses a Chinese-specific tokenization method for web summarization.
 
-**Additional Parameters（Optional）:**
+> 🔸 For Chinese datasets like `xbench`, use `infer_local_sds_cn.sh` instead.
 
-In practical, only in the cases of HLE and GAIA is there a possibility of exceeding the length limit, you can use refiner. Generally, it won't occur in other situations.  
-
-- `--use_rollback`: Whether to use the rollback mechanism.
-- `--use_refiner`: Whether to use the refine mechanism.
-
-
-In `evaluation/tools/refine_code.py`:
-
-```python
-def refine(prompt, response):
-
-    API_BASE_URL = "your_api_base_url"
-    MODEL_NAME = "Qwen2.5-7B-Instruct"
-    client = OpenAI(
-        api_key="empty",
-        base_url=API_BASE_URL,
-    )
-    ...
-```
 
 ### 5. Calculate Metrics
 
