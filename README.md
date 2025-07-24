@@ -331,7 +331,7 @@ vllm_launch_summarize_model_cuda0-3_qweb3_14b.sh
 ```
 Make sure to update the same variables MODEL_PATH and MODEL_NAME in the corresponding summarization script.
 
-# Start the inference model
+**Start the inference model**
 
 Choose the summarization model you want to use and run the corresponding script:
 
@@ -339,7 +339,7 @@ Choose the summarization model you want to use and run the corresponding script:
 bash vllm_launch_reasoning_model_cuda4-7.sh
 ```
 
-# Start the summarization model
+**Start the summarization model**
 ```bash
 bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
 ```
@@ -353,6 +353,13 @@ In this section, we will deploy the retriever for performing search tasks on Wik
 To start the inference pipeline, first update the necessary fields in evaluation/infer_local_sds.sh:
 
 ```bash
+# Datasets to evaluate — uncomment the ones you want to include:
+# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
+data_names=(
+    "hle"
+    "gaia"
+)
+
 # Required parameters to update:
 EXP_NAME="<your_exp_name>"                   # Name of this experiment run
 MODEL_PATH="<your_model_path>"               # Path to the reasoning model
@@ -369,106 +376,6 @@ Once you have filled in the above fields, start the inference by running:
 bash evaluation/infer_local_sds.sh
 ```
 > 🔸 **Note:** If you are evaluating the `xbench` dataset, we recommend using the alternative script `infer_local_sds_cn.sh`, which adopts Chinese prompts and uses a Chinese-specific tokenization method for web summarization.
-
-### 4. Inference Your Model
-
-In this section, we infer answers using a trained model. We support five types of mathematical reasoning datasets: AIME24, AIME25, GSM8K, MATH, and MATH500, as well as seven QA reasoning datasets: WebWalker, HotpotQA, 2WikiMultiHopQA, Bamboogle, MuSiQue, GAIA, and HLE. Due to resource constraints, all models and baselines will test a maximum of 500 samples for mathematical reasoning, 200 samples for all QA datasets, and 500 samples for HLE (please refer our code).
-
-First, replace the API_URL and API key with your own in the following files:
-
-In `evaluation/utils.py`:
-
-```python
-def search(query: str):
-    if query == '':
-        return 'invalid query'
-
-    url = f'your_search_api_url'
-    ...
-
-def batch_search(query: Union[str, List[str]], top_n=5) -> List[str]:
-    if len(query) == 0:
-        return 'invalid query'
-
-    url = f'your_search_api_url'
-    ...
-```
-
-In `evaluation/tools/web_search_main.py`:
-
-```python
-def deep_search(search_query, top_k=10, use_jina=False, jina_api_key="empty", bing_subscription_key="xxxxx", bing_endpoint="xxxxx/search"):
-    args = Namespace(
-        dataset_name='qa',
-        split='test',
-        subset_num=-1,
-        max_search_limit=15,
-        top_k=top_k,  
-        use_jina=use_jina,  
-        jina_api_key=jina_api_key,  
-        temperature=0.7,
-        top_p=0.8,
-        min_p=0.05,
-        top_k_sampling=20,
-        repetition_penalty=1.05,
-        max_tokens=4096,
-        bing_subscription_key=bing_subscription_key,  
-        bing_endpoint=bing_endpoint,  
-        eval=False,
-        seed=1742208600,
-        api_base_url='xxxxx',  
-        model_name='search-agent',
-        concurrent_limit=200
-    )
-    ...
-```
-
-In `evaluation/tools/debug_code.py`:
-
-```python
-def debug_code_function(code, error, api_key="your_api_key"):
-
-    API_BASE_URL = api_key
-    MODEL_NAME = "Qwen2.5-7B-Instruct"
-    client = OpenAI(
-        api_key="empty",
-        base_url=API_BASE_URL,
-    )
-    ...
-```
-
-Then, start the inference. We recommend that you use the default parameters as:
-
-```bash
-cd evaluation
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
-export TOKENIZERS_PARALLELISM=true
-export PYTHONPATH=/path/to/your_path:$PYTHONPATH
-module load cuda/11.8
-python run.py \
-    --model_path /path/to/your_model_path \
-    --dataset_name math \
-    --task math \
-    --gpu_use 0.95 \
-    --max_tokens 16384 \ #you can change this, 8192 is enough for most tasks
-    --max_input_len 16384 \ #you can change this, 8192 is enough for most tasks
-    --output_path /path/to/your_results/your_exp_math_result.json \
-    --counts 500 \
-    --batch_size 100 \
-    --use_debug 
-```
-
-**Parameter Explanations:**
-- `--model_path`: Path to your model.
-- `--dataset_name`: Name of your dataset (supports AIME24, AIME25, GSM8K, MATH, MATH500, WebWalker, HotpotQA, 2WikiMultiHopQA, Bamboogle, MuSiQue, GAIA, and HLE).
-- `--task`: Set to `math` for mathematical reasoning datasets and `qa` for QA reasoning datasets.
-- `--gpu_use`: GPU memory utilization.
-- `--max_tokens`: Maximum number of tokens the model can generate.
-- `--max_input_len`: Maximum input tokens the model can accept.
-- `--output_path`: Path to save the results.
-- `--counts`: Number of samples to take from the test set during testing.
-- `--batch_size`: Batch size for parallel inference.
-- `--use_debug`: Enable the debug mechanism.
 
 **Additional Parameters（Optional）:**
 
@@ -494,44 +401,6 @@ def refine(prompt, response):
 
 ### 5. Calculate Metrics
 
-First, replace the API URL and API key with your own in the following file:
-
-In `evaluation/evaluate/scripts/evaluate.py`:
-
-```python
-async def llm_evaluate_equivalence_batch(
-    questions: List[str],
-    labeled_answers: List[str], 
-    pred_answers: List[str],
-    api_base_url: str = None,
-    model_name: str = None,
-    api_key: str = "empty",
-    concurrent_limit: int = 50,
-    extract_answer: bool = False
-) -> List[bool]:
-    """
-    Evaluate multiple answer pairs concurrently using LLM
-    """
-    if api_base_url is None:
-        api_base_url = "http://114514.1919810/v1"
-    if model_name is None:
-        model_name = "Qwen2.5-72B-Instruct"
-    ...
-```
-
-Replace `api_base_url` with the API_URL of your deployed model.
-
-Then, run the following command:
-
-```bash
-cd evaluation
-python evaluate/scripts/evaluate.py \
-    --output_path /path/to/your_results/your_exp_math_result.json \
-    --task math \
-    --dataset_name math \
-    --use_llm \
-    --extract_answer
-```
 
 **Parameter Explanations:**
 - `--output_path`: Path to save the results.
