@@ -373,15 +373,38 @@ bash evaluation/infer_local_sds.sh
 > 🔸 For Chinese datasets like `xbench`, use `infer_local_sds_cn.sh` instead.
 
 
-### 5. Calculate Metrics
+### 4. Calculate Metrics
 
+After generating inference results, you can use a large model like **Qwen2.5-72B-Instruct** to evaluate them with more powerful understanding capabilities.
 
-**Parameter Explanations:**
-- `--output_path`: Path to save the results.
-- `--task`: Set to `math` for mathematical reasoning datasets and `qa` for QA reasoning datasets.
-- `--dataset_name`: Name of your dataset.
-- `--use_llm`: Whether to use the LLM-as-judge mechanism.
-- `--extract_answer`: Whether to use exact matching (removes \text and other redundant symbols).
+First, use the vLLM environment to start the evaluation model:
+
+```bash
+bash evaluation/deploy_qwen2.5_72B_instruct.sh
+```
+
+In that script, make sure to update the `vllm serve` command with your own model path:
+
+```bash
+vllm serve <your_model_path> \
+  --served-model-name Qwen2.5-72B-Instruct \
+  --max-model-len 32768 \
+  --tensor_parallel_size 4 \
+  --gpu-memory-utilization 0.75 \
+  --quantization gptq \
+  --port 8001
+```
+
+Before running the evaluation script, update the following line in `evaluate_passk.sh` to specify the output directory:
+
+```bash
+OUTPUT_DIR="<your_result_directory>"
+```
+
+Then, run the evaluation script to calculate metrics:
+
+```bash
+bash evaluation/evaluate_passk.sh
 
 ---
 
