@@ -332,6 +332,10 @@ pip install -r requirements.txt
 Edit the `infer_local_sds.sh` script with the following values:
 
 ```bash
+# Activate your Conda environment manually if 'conda' is not available in shell
+source < /path/to/your/conda >/bin/activate
+conda activate < your env name >
+
 # Datasets to evaluate — uncomment the ones you want to include:
 # Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
 data_names=(
@@ -371,6 +375,10 @@ bash evaluation/deploy_qwen2.5_72B_instruct.sh
 In that script, make sure to update the `vllm serve` command with your own model path:
 
 ```bash
+# Activate your Conda environment manually if 'conda' is not available in shell
+source < /path/to/your/conda >/bin/activate
+conda activate < your env name >
+
 vllm serve <your_model_path> \
   --served-model-name Qwen2.5-72B-Instruct \
   --max-model-len 32768 \
