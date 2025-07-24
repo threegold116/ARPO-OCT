@@ -331,7 +331,7 @@ vllm_launch_summarize_model_cuda0-3_qweb3_14b.sh
 ```
 Make sure to update the same variables MODEL_PATH and MODEL_NAME in the corresponding summarization script.
 
-#Start the inference model
+# Start the inference model
 
 Choose the summarization model you want to use and run the corresponding script:
 
@@ -339,7 +339,7 @@ Choose the summarization model you want to use and run the corresponding script:
 bash vllm_launch_reasoning_model_cuda4-7.sh
 ```
 
-#Start the summarization model
+# Start the summarization model
 ```bash
 bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
 ```
@@ -349,17 +349,26 @@ bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
 
 In this section, we will deploy the retriever for performing search tasks on Wikipedia-based datasets. We provide a Wikipedia retriever service implemented using FlashRAG and FastAPI. Before starting the retriever serving, you need to download the [pre-indexed Wikipedia](https://github.com/RUC-NLPIR/FlashRAG?tab=readme-ov-file#index), [Wikipedia corpus, and corresponding retriever models](https://github.com/RUC-NLPIR/FlashRAG/blob/main/docs/original_docs/reproduce_experiment.md#preliminary). The corpuses used can be found [here](https://huggingface.co/datasets/RUC-NLPIR/FlashRAG_datasets/tree/main/retrieval-corpus), and Index construction method can be found [here](https://github.com/RUC-NLPIR/FlashRAG/tree/main?tab=readme-ov-file#rocket-quick-start).
 
-More details can be found in the [FlashRAG documentation](https://github.com/RUC-NLPIR/FlashRAG/tree/main?tab=readme-ov-file#rocket-quick-start).
 
-To start the retriever serving, first fill in `evaluation/search/serving_config.yaml` with the correct paths to the retrieval model, index, and corpus, as well as available GPU IDs. Then, run the following command to start the retriever serving:
+To start the inference pipeline, first update the necessary fields in evaluation/infer_local_sds.sh:
 
 ```bash
-cd evaluation/search
-python host_wiki.py \
-    --config serving_config.yaml \
-    --num_retriever {num_retriever} \
-    --port {port}
+# Required parameters to update:
+EXP_NAME="<your_exp_name>"                   # Name of this experiment run
+MODEL_PATH="<your_model_path>"               # Path to the reasoning model
+OUTPUT_PATH="<your_output_path>"             # Directory to save outputs
+CONDA_PATH="<your_conda_path>"               # Path to your Conda installation
+CONDA_ENV="<your_env_name>"                  # Name of your Conda environment
+BING_API_KEY="<your_bing_search_api_key>"    # Bing Search API key
+BING_ZONE="<your_bing_zone>"                 # Bing API zone
+SUMM_MODEL_PATH="<your_summarization_model_path>"  # Path to summarization model checkpoints
 ```
+Once you have filled in the above fields, start the inference by running:
+
+```bash
+bash evaluation/infer_local_sds.sh
+```
+> 🔸 **Note:** If you are evaluating the `xbench` dataset, we recommend using the alternative script `infer_local_sds_cn.sh`, which adopts Chinese prompts and uses a Chinese-specific tokenization method for web summarization.
 
 ### 4. Inference Your Model
 
