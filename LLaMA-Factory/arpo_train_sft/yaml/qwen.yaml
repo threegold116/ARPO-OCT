@@ -1,12 +1,12 @@
 ### model
-model_name_or_path: /mmu_nlp_hdd/dujiazhen03/model/QwQ-32B
+model_name_or_path: <your_model_path>
 trust_remote_code: true
 
 ### method
 stage: sft
 do_train: true
 finetuning_type: full
-deepspeed: /mmu_nlp_ssd/makai05/DeepResearch/train_sft/configs/deepspeed/ds_z3_offload_config.json  # choices: [ds_z0_config.json, ds_z2_config.json, ds_z3_config.json]
+deepspeed: ../examples/deepspeed/ds_z3_offload_config.json  # choices: [ds_z0_config.json, ds_z2_config.json, ds_z3_config.json]
 
 ### dataset
 dataset_dir: dataset_info
