@@ -11,7 +11,6 @@
 
 [![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)](https://arxiv.org/abs/2505.16410)
 [![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/papers/2505.16410)
-[![Model](https://img.shields.io/badge/Model-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)
 [![License](https://img.shields.io/badge/LICENSE-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/) 
 [![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2FKevin_GuoweiXu%2Fstatus%2F1858338565463421244)](https://x.com/_akhaliq/status/1925924431676821698)
@@ -105,8 +104,8 @@ As shown below, Tool-Star demonstrates strong overall reasoning performance acro
 In this step, we will describe how to perform a cold start for the SFT stage using the Llama Factory repository. Please first set up the environment for [Llama Factory](https://github.com/hiyouga/LLaMA-Factory).
 
 ```bash
-git clone --depth 1 https://github.com/hiyouga/LLaMA-Factory.git
-cd LLaMA-Factory
+git clone https://github.com/dongguanting/ARPO
+cd ARPO/LLaMA-Factory
 pip install -e ".[metrics]"
 ```
 
@@ -115,21 +114,22 @@ pip install -e ".[metrics]"
 
 1. Download your SFT dataset from [🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K) and place it in `LLaMA-Factory-main/data/final_sft_edition9.json`. Define the dataset in `dataset_info.json`.
 
-2. Complete the path information in `LLaMA-Factory-main/examples/train_full/qwen_sft_tool_star.yaml`. The file content should be as follows:
+2. Complete the path information in `LLaMA-Factory/arpo_train_sft/yaml`. The file content should be as follows:
 
 ```yaml
 ### model
-model_name_or_path: {your_path_to_model}/Qwen2.5-3B-Instruct
+model_name_or_path: your_model_path/Qwen3-14B
 trust_remote_code: true
 
 ### method
 stage: sft
 do_train: true
 finetuning_type: full
-deepspeed: examples/deepspeed/ds_z3_config.json  # choices: [ds_z0_config.json, ds_z2_config.json, ds_z3_config.json]
+deepspeed: ../examples/deepspeed/ds_z3_config.json  # choices: [ds_z0_config.json, ds_z2_config.json, ds_z3_config.json]
 
 ### dataset
-dataset: final_sft_edition9
+dataset_dir: dataset_info
+dataset: your_dataset
 template: qwen
 cutoff_len: 15000
 max_samples: 1000000
@@ -137,7 +137,7 @@ overwrite_cache: true
 preprocessing_num_workers: 16
 
 ### output
-output_dir: {your_save_path}/Qwen2.5-3B-Instruct-final_sft_edition10-52
+output_dir: checkpoints/qwen
 logging_steps: 10
 save_steps: 2000
 plot_loss: true
@@ -145,20 +145,20 @@ overwrite_output_dir: true
 
 ### train
 per_device_train_batch_size: 1
-gradient_accumulation_steps: 4
+gradient_accumulation_steps: 2
 learning_rate: 7.0e-6
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
 warmup_ratio: 0.1
 bf16: true
 ddp_timeout: 180000000
+
 ```
 
 After completing the information, you can fine-tune the model using the following command:
 
 ```python
-cd LLaMA-Factory-main
-bash ./examples/train_full/train_sft.sh
+bash arpo_train_sft/sft_train.sh
 ```
 
 ---
