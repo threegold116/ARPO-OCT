@@ -314,13 +314,28 @@ For the specific deployment, you can refer to the following script.
 ```bash
 cd evaluation/vllm_scripts
 ```
+First, replace the MODEL_NAME and MODEL_PATH with your own in the following files:
+
+In `vllm_scipts/vllm_launch_reasoning_model_cuda4-7.sh`:
+
+```bash
+MODEL_PATH="< path/to/your/checkpoints >"
+MODEL_NAME="your_model_name"
+```
+
+Choose the summarization model you want to use and edit the corresponding script.
+
 Start the inference model
 
 ```bash
-vllm_launch_reasoning_model_cuda4-7.sh
+bash vllm_launch_reasoning_model_cuda4-7.sh
 ```
 
-Start the inference model
+Start the summarization model
+```bash
+bash vllm_launch_summarize_model_cuda0-3_$summarization_model.sh
+```
+
 
 ### 3. Retriever Serving Deployment
 
