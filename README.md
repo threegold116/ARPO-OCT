@@ -213,6 +213,7 @@ Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting
 
 Additionally, please also replace the API key and zone in the following file: `/verl_arpo_entropy/verl/workers/rollout/tools/config_example.yaml`. Below is the instruction on how to do this:
 
+<details>
 ```yaml
 tools:
   # General tool configuration
@@ -240,6 +241,7 @@ tools:
         result_length: 1000
         location: cn
 ```
+</details>
 
 Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process.
 
@@ -247,7 +249,7 @@ Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright 
 
 We have open-sourced a series of ARPO scripts located in the `/ARPO/scripts/` directory, which includes configurations for 7B, 8B, and 14B models. Below is an example of how to set up and run training for training ARPO.
 
-
+<details>
 ```bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PARENT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -405,8 +407,17 @@ python3 -m verl.trainer.main_ppo \
     trainer.rollout_data_dir=${ROLLOUT_SAVE_PATH} \
     hydra.run.dir=${SAVE_PATH}/outputs 2>&1 | tee ${SAVE_PATH}/run.log
 ```
+</details>
 
 This script provides a comprehensive setup for running ARPO RL training. Make sure to replace placeholders like `<your_path_to_ARPO>`, `<your_model_path>`, and `<your_checkpoint_save_dir>` with your actual paths.
+
+
+Then, you can then run the following script to start training:
+
+```bash
+cd ./ARPO/scripts/
+bash ARPO_7B_Reasoning_1node.sh
+```
 
 
 
