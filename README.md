@@ -199,12 +199,12 @@ pip install -r requirements.txt
 In our paper, we offer two type of train & validation datasets to verify the effectiveness of ARPO:
 
 1. **Reasoning and Knowledge Dataset**: This dataset is used to test the benchmarks listed in Table 1.
-   - **train.parquet**: Contains 10K samples for mathematical and knowledge reasoning.
+   - **train_10k.parquet**: Contains 10K samples for mathematical and knowledge reasoning.
    - **test.parquet**: Comprises 300 test samples from 8 datasets, including AIME24, AIME25, MATH500, GSM8k, HotpotQA, 2Wiki, Misque, and Bamboogle.
 
 2. **Deep Search Dataset**: This dataset is used to test the benchmarks listed in Table 2.
-   - **hard_search.parquet**: Contains 1K samples, including 800 samples from simpledeepsearch and 200 samples from Bamboogle.
-   - **valid.parquet**: Contains 300 test samples from GAIA and Humanity Last Exam (HLE).
+   - **hard_search.parquet**: Contains 1K samples, including 800 samples from simpledeepsearch and 200 samples from webdancer.
+   - **gaia_test.parquet/hle_test.parquet**: Contains test samples from GAIA and Humanity Last Exam (HLE).
 
 
 ### 2.2 API Key Configuration
