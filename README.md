@@ -107,11 +107,13 @@ pip install -r requirements.txt
 
 1. Download your SFT dataset from [🤗ARPO-SFT-54K](https://huggingface.co/datasets/dongguanting/ARPO-SFT-54K) and place it in `LLaMA-Factory-main/data/final_sft_edition9.json`. Define the dataset in `dataset_info.json`.
 
-2. Complete the path information in `LLaMA-Factory/arpo_train_sft/yaml`. The file content should be as follows:
+2. Configure Training
+
+Update `LLaMA-Factory/arpo_train_sft/yaml` with the following content:
 
 ```yaml
 ### model
-model_name_or_path: your_model_path/Qwen3-14B
+model_name_or_path: <your_model_path>
 trust_remote_code: true
 
 ### method
@@ -122,7 +124,7 @@ deepspeed: ../examples/deepspeed/ds_z3_config.json  # choices: [ds_z0_config.jso
 
 ### dataset
 dataset_dir: dataset_info
-dataset: your_dataset
+dataset: <your_dataset>
 template: qwen
 cutoff_len: 15000
 max_samples: 1000000
@@ -130,7 +132,7 @@ overwrite_cache: true
 preprocessing_num_workers: 16
 
 ### output
-output_dir: checkpoints/qwen
+output_dir: <your_output_dir>
 logging_steps: 10
 save_steps: 2000
 plot_loss: true
@@ -146,6 +148,12 @@ warmup_ratio: 0.1
 bf16: true
 ddp_timeout: 180000000
 
+```
+Also, update the output directory in arpo_train_sft/sft_train.sh:
+
+```bash
+# Output directory
+OUTPUT_DIR="<your_output_dir>"
 ```
 
 After completing the information, you can fine-tune the model using the following command:
@@ -260,7 +268,7 @@ source < /path/to/your/conda >/bin/activate
 conda activate < your env name >
 
 # Datasets to evaluate — uncomment the ones you want to include:
-# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
+# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, 
 data_names=(
     "hle"
     "gaia"
