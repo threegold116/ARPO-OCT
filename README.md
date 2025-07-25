@@ -42,13 +42,6 @@
 - **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL for the Qwen2.5, Qwen3, and Llama3 series models. Our team has implemented extensive parallelization and memory optimization during tool calling. We welcome you to give it a try.
 
 
-## :mag_right: Roadmap
-
-Tool-star is still under development and there are many issues and room for improvement. We will continue to update. And we also sincerely welcome contributions on this open-source toolkit.
-- [x] Release tiny LLM version (e.g. 0.5B, 1.5B)
-- [x] Support larger parameter size LLM (e.g. 7B)
-- [ ] Support More Reasoning Tools ---> will released in our future work.
-
 
 ## Table of Contents
 
