@@ -36,8 +36,7 @@
 
 ## 📣 Latest News
 
-- **[July 25, 2025]**: The brief introduction of ARPO can be found on platforms like **[X](), [Zhihu]() and [Wechat]()**.
-- **[July 25, 2025]**: 🔥 We released all our ARPO checkpoint（3B~14B） and datasets (SFT, RL and Inference). Checkout **[🤗ARPO Collection](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)** here. We will keep update it!
+- **[July 25, 2025]**: 🔥 We released all our **ARPO model checkpoints (3B~14B)** and **datasets(SFT, RL, Evaluation)**. Checkout **[🤗ARPO Collection](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)** here. We will keep update it!
 - **[July 25, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()** daily paper.
 - **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL for the Qwen2.5, Qwen3, and Llama3 series models. Our team has implemented extensive parallelization and memory optimization during tool calling. We welcome you to give it a try.
 
