@@ -1,9 +1,6 @@
 <div align=center>
 <img src="https://github.com/dongguanting/ARPO/blob/main/logo1.png" width="150px">
 </div>
-
-
-
 <h1 align="center"> ✨ Agentic Reinforced Policy Optimization</a></h1>
 
 
