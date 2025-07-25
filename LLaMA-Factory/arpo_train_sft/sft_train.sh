@@ -16,7 +16,7 @@ MASTER_ADDR="127.0.0.1"  # Address of the master node
 MASTER_PORT=29500        # Port of the master node
 
 # Output directory
-OUTPUT_DIR="checkpoints/qwen"
+OUTPUT_DIR="<your_output_dir>"
 # Create output directory if it doesn't exist
 mkdir -p ${OUTPUT_DIR}
 
