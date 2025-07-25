@@ -37,8 +37,8 @@
 
 ## 📣 Latest News
 
+- **[July 28, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()** daily paper.
 - **[July 25, 2025]**: 🔥 We released all our **ARPO model checkpoints (3B~14B)** and **datasets(SFT, RL, Evaluation)**. Checkout **[🤗ARPO Collection](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)** here. We will keep update it!
-- **[July 25, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()** daily paper.
 - **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL training for the Qwen3 and Llama3 models. We have implemented extensive tool-call acceleration and memory optimization during RL training. 
 
 
@@ -222,6 +222,7 @@ pip install -r requirements.txt
 Edit the following launch scripts with your own model paths and names:
 
 In `vllm_launch_reasoning_model_cuda4-7.sh`:
+
 ```bash
 MODEL_PATH="<path/to/your/reasoning_model_checkpoint>"
 MODEL_NAME="your_model_name"
@@ -268,7 +269,7 @@ source < /path/to/your/conda >/bin/activate
 conda activate < your env name >
 
 # Datasets to evaluate — uncomment the ones you want to include:
-# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, 
+# Options: aime24, aime25, math500, gsm8k, math, webwalker, hotpotqa, 2wiki, bamboogle, musique, hle, gaia, SimpleQA, xbench
 data_names=(
     "hle"
     "gaia"
@@ -284,6 +285,7 @@ BING_API_KEY="<your_bing_search_api_key>"    # Bing Search API key
 BING_ZONE="<your_bing_zone>"                 # Bing API zone
 SUMM_MODEL_PATH="<your_summarization_model_path>"  # Path to summarization model checkpoints
 ```
+> For Bing API usage, please refer to [Bright Data](https://brightdata.com/).
 
 Run the evaluation:
 ```bash
