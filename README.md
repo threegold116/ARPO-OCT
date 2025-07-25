@@ -42,11 +42,10 @@
 - **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL for the Qwen2.5, Qwen3, and Llama3 series models. Our team has implemented extensive parallelization and memory optimization during tool calling. We welcome you to give it a try.
 
 
-
 ## Table of Contents
 
-- [Tool-Star](#🔧✨tool-star-empowering-llm-brained-multi-tool-reasoner-via-reinforcement-learning)
-  - [Overall Performance](#-overall-performance)
+
+- [Overall Performance](#-overall-performance)
 - [Quick Start](#-quick-start-for-training)
   - [Cold-Start SFT Stage](#-cold-start-sft-stage)
     - [Environment Setup](#1-environment-setup)
@@ -70,12 +69,9 @@
 ## 💡 Overview
 
 
----
+<img width="1330" height="715" alt="image" src="https://github.com/user-attachments/assets/5ba6151d-4ecf-4b64-85da-82bf83e12a15" />
 
-### 📊 Overall Performance
-
-
-
+we propose \textbf{A}gentic \textbf{R}einforced \textbf{P}olicy \textbf{O}ptimization (\textbf{ARPO}), an agentic RL algorithm tailored for training multi-turn LLM-based agent. The core principle of ARPO is to encourage the policy model to adaptively branch sampling during high-entropy tool-call rounds, thereby efficiently aligning step-level tool-use behaviors.
 
 # 🏃 Quick Start for Training
 
