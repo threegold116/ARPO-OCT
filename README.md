@@ -206,11 +206,14 @@ In our paper, we offer two type of train & validation datasets to verify the eff
    - **hard_search.parquet**: Contains 1K samples, including 800 samples from simpledeepsearch and 200 samples from Bamboogle.
    - **valid.parquet**: Contains 300 test samples from GAIA and Humanity Last Exam (HLE).
 
+
 ### API Key Configuration
 
-Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting the training, please replace the API key and zone in the following file: `/verl_arpo_entropy/verl/workers/rollout/tools/config_example.yaml`. Here is the instruction:
+Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting the training, please replace the API key and zone in the following files: `ARPO/scripts/config/ppo_trainer_dr.yaml` and `ARPO/scripts/config/ppo_trainer.yaml`.
 
-```python
+Additionally, please also replace the API key and zone in the following file: `/verl_arpo_entropy/verl/workers/rollout/tools/config_example.yaml`. Below is the instruction on how to do this:
+
+```yaml
 tools:
   # General tool configuration
   call_limit: 3  # Maximum number of tool calls allowed per sample
@@ -231,13 +234,14 @@ tools:
     search:
       class_path: verl.workers.rollout.tools.search_tool.BingSearchTool
       params:
-        api_key: <your_API_key>
-        zone: <your_zone>
+        api_key: <your_API_key>  # Replace with your Bright Data API key
+        zone: <your_zone>  # Replace with your Bright Data zone
         max_results: 10
         result_length: 1000
         location: cn
 ```
 
+Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process.
 
 ### 2. ARPO RL Training
 
