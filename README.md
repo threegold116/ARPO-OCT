@@ -19,10 +19,13 @@
 </div>
 
 <p align="center">
-🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B" target="_blank">Tool-Star-Qwen-0.5B</a> ｜
-🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B" target="_blank">Tool-Star-Qwen-1.5B</a> ｜
-🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-3B" target="_blank">Tool-Star-Qwen-3B</a> ｜
-🤗 <a href="https://huggingface.co/dongguanting/Tool-Star-Qwen-7B" target="_blank">Tool-Star-Qwen-7B</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Qwen2.5-3B-ARPO" target="_blank">Qwen2.5-3B-ARPO</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Qwen2.5-7B-ARPO" target="_blank">Qwen2.5-7B-ARPO</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Llama3.1-8B-ARPO" target="_blank">Llama3.1-8B-ARPO</a> ｜
+🤗 <a href="https://huggingface.co/dongguanting/Qwen3-8B-ARPO-DeepSearch" target="_blank">Qwen3-8B-ARPO-DeepSearch</a> ｜ 
+🤗 <a href="https://huggingface.co/dongguanting/Qwen3-14B-ARPO-DeepSearch" target="_blank">Qwen3-14B-ARPO-DeepSearch</a> 
+  
+  ｜
   </p>
   <p align="center">
 🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
