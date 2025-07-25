@@ -1,5 +1,5 @@
 <div align=center>
-<img src="https://github.com/dongguanting/ARPO/blob/main/logo1.png" width="120px">
+<img src="https://github.com/dongguanting/ARPO/blob/main/logo1.png" width="150px">
 </div>
 
 
