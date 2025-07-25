@@ -52,7 +52,7 @@
     - [Fine-Tuning Model](#2-fine-tuning-model)
   - [ARPO Stage](#-arpo-stage)
     - [Environment Setup](#1-environment-setup-1)
-    - [ARPO RL Training](#2-arpo-rl-training)
+    - [ARPO RL Training](#3-arpo-rl-training)
   - [ARPO Evaluation](#-arpo-evaluation)
     - [Setup vLLM Inference Environment](#1-setup-vllm-inference-environment)
     - [Setup Evaluation Environment](#2-setup-evaluation-environment)
@@ -194,7 +194,7 @@ pip install -r requirements.txt
 
 ## 2. Preparation
 
-### Data Preparation
+### 2.1 Data Preparation
 
 In our paper, we offer two type of train & validation datasets to verify the effectiveness of ARPO:
 
@@ -207,7 +207,7 @@ In our paper, we offer two type of train & validation datasets to verify the eff
    - **valid.parquet**: Contains 300 test samples from GAIA and Humanity Last Exam (HLE).
 
 
-### API Key Configuration
+### 2.2 API Key Configuration
 
 Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting the training, please replace the API key and zone in the following files: `ARPO/scripts/config/ppo_trainer_dr.yaml` and `ARPO/scripts/config/ppo_trainer.yaml`.
 
@@ -249,9 +249,10 @@ tools:
 Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process. If you have any questions or need further assistance, feel free to ask!
 
 
-### 2. ARPO RL Training
+### 3. ARPO RL Training
 
-We have open-sourced a series of ARPO scripts located in the `/ARPO/scripts/` directory, which includes configurations for 7B, 8B, and 14B models. Below is an example of how to set up and run training for training ARPO.
+We have open-sourced a series of ARPO scripts located in the `/ARPO/scripts/` directory, which includes configurations for 7B, 8B, and 14B models. Below is an example of how to set up and run training for training ARPO. Make sure to replace placeholders like `<your_path_to_ARPO>`, `<your_model_path>`, and `<your_checkpoint_save_dir>` with your actual paths.
+
 
 <details>
 <summary>🔍 Click here! Watch the details of train bash</summary>
@@ -416,8 +417,6 @@ python3 -m verl.trainer.main_ppo \
 
 </details>
 
-This script provides a comprehensive setup for running ARPO RL training. Make sure to replace placeholders like `<your_path_to_ARPO>`, `<your_model_path>`, and `<your_checkpoint_save_dir>` with your actual paths.
-
 
 You can then run the following script to start training:
 
@@ -427,6 +426,7 @@ bash ARPO_7B_Reasoning_1node.sh
 ```
 
 For the trained RL checkpoint, you can follow the code below to convert the weights to Hugging Face format：
+
 ```bash
 bash ./ARPO/merge_ckpt/convert_checkpoint_from_verl_to_hf_qwen3.sh
 ```
