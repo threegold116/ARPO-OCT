@@ -416,12 +416,18 @@ python3 -m verl.trainer.main_ppo \
 This script provides a comprehensive setup for running ARPO RL training. Make sure to replace placeholders like `<your_path_to_ARPO>`, `<your_model_path>`, and `<your_checkpoint_save_dir>` with your actual paths.
 
 
-Then, you can then run the following script to start training:
+You can then run the following script to start training:
 
 ```bash
 cd ./ARPO/scripts/
 bash ARPO_7B_Reasoning_1node.sh
 ```
+
+For the trained RL checkpoint, you can follow the code below to convert the weights to Hugging Face format：
+```bash
+bash ./ARPO/merge_ckpt/convert_checkpoint_from_verl_to_hf_qwen3.sh
+```
+
 
 
 
