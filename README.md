@@ -214,7 +214,8 @@ Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting
 Additionally, please also replace the API key and zone in the following file: `/verl_arpo_entropy/verl/workers/rollout/tools/config_example.yaml`. Below is the instruction on how to do this:
 
 <details>
-<summary> Details of tool api configuration yaml </summary>
+<summary>Details of tool API configuration YAML</summary>
+
 ```yaml
 tools:
   # General tool configuration
@@ -245,14 +246,16 @@ tools:
 
 </details>
 
-Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process.
+Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process. If you have any questions or need further assistance, feel free to ask!
+
 
 ### 2. ARPO RL Training
 
 We have open-sourced a series of ARPO scripts located in the `/ARPO/scripts/` directory, which includes configurations for 7B, 8B, and 14B models. Below is an example of how to set up and run training for training ARPO.
 
 <details>
-<summary> Details of train bash </summary>
+<summary>Details of train bash</summary>
+  
 ```bash
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PARENT_DIR="$(dirname "$SCRIPT_DIR")"
