@@ -10,14 +10,15 @@
 <div align="center"> 
 
 [![Paper](https://img.shields.io/badge/Paper-arXiv-b5212f.svg?logo=arxiv)]()
-[![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-blue?logo=huggingface)]()
-[![Model](https://img.shields.io/badge/Model-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)
-[![Dataset](https://img.shields.io/badge/Dataset-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)
+[![Paper](https://img.shields.io/badge/Paper-Hugging%20Face-yellow?logo=huggingface)]()
+[![Model](https://img.shields.io/badge/Model-Hugging%20Face-blue?logo=huggingface)](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)
+[![Dataset](https://img.shields.io/badge/Dataset-Hugging%20Face-blue?logo=huggingface)](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)
 [![License](https://img.shields.io/badge/LICENSE-MIT-green.svg)](https://opensource.org/licenses/MIT) 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/release/python-390/) 
 [![X (formerly Twitter) URL](https://img.shields.io/twitter/url?url=https%3A%2F%2Fx.com%2FKevin_GuoweiXu%2Fstatus%2F1858338565463421244)]()
 </div>
 
+<!--
 <p align="center">
 🤗 <a href="https://huggingface.co/dongguanting/Qwen2.5-3B-ARPO" target="_blank">Qwen2.5-3B-ARPO</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Qwen2.5-7B-ARPO" target="_blank">Qwen2.5-7B-ARPO</a> ｜
@@ -30,19 +31,18 @@
 🤗 <a href="https://huggingface.co/datasets/dongguanting/ARPO-RL-Reasoning-10K" target="_blank">ARPO-RL-Reasoning-10K</a>
 🤗 <a href="https://huggingface.co/datasets/dongguanting/ARPO-RL-DeepSearch-1K" target="_blank">ARPO-RL-DeepSearch-1K</a>
 </p>
+-->
+
 
 
 <h5 align="center"> If you like our project, please give us a star ⭐ on GitHub for the latest update.</h5>
 
 ## 📣 Latest News
 
-- **[June 6, 2025]**: We released more lightweight checkpoints of Tool-Star . Checkout **[🤗Tool-Star-Qwen-0.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-0.5B)** & **[🤗Tool-Star-Qwen-1.5B](https://huggingface.co/dongguanting/Tool-Star-Qwen-1.5B)** here.
-- **[July 25, 2025]**: The brief introduction of Tool-Star can be found on platforms like **[X](https://x.com/_akhaliq/status/1925924431676821698), [Zhihu](https://zhuanlan.zhihu.com/p/1911573573602115645) and [Wechat](https://mp.weixin.qq.com/s/UNP3P2GEtIuYhT7Z8wIV1g?scene=1)**.
-- **[July 25, 2025]**: **[🤗 Tool-Star Collection](https://huggingface.co/collections/dongguanting/tool-star-682fd73dfa508bf3f40da032)** is now available on Hugging Face. We will keep update it!
-- **[July 25, 2025]**: 🔥 We released an our cold-star SFT and RL dataset for tool-integrated reasoning. Checkout **[🤗Tool-Star-SFT-54K](https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K)** and **[Multi-Tool-RL-10K](https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K)** here.
-- **[July 25, 2025]**: 🔥 We released our ARPO checkpoint. Checkout **[🤗Tool-Star-Qwen-3B](https://huggingface.co/dongguanting/Tool-Star-Qwen-3B)** here.
-- **[July 25, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/pdf/2505.16410)** and **[Hugging Face](https://huggingface.co/papers/2505.16410)** daily paper.
-- **[July 25, 2025]**: 🚀 Full codebase released. Tool-Star supports multiple Tools with several open-source models like Qwen2.5-3B-Instruct.
+- **[July 25, 2025]**: The brief introduction of ARPO can be found on platforms like **[X](), [Zhihu]() and [Wechat]()**.
+- **[July 25, 2025]**: 🔥 We released all our ARPO checkpoint（3B~14B） and datasets (SFT, RL and Inference). Checkout **[🤗ARPO Collection](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)** here. We will keep update it!
+- **[July 25, 2025]**: 📄 Our paper is now available on **[arXiv]()** and **[Hugging Face]()** daily paper.
+- **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL for the Qwen2.5, Qwen3, and Llama3 series models. Our team has implemented extensive parallelization and memory optimization during tool calling. We welcome you to give it a try.
 
 
 ## :mag_right: Roadmap
