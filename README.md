@@ -190,9 +190,9 @@ pip3 install -e .
 pip install -r requirements.txt
 
 ```
+---
 
-
-## 2. Preparation
+### 2. Preparation
 
 ### 2.1 Data Preparation
 
@@ -248,6 +248,7 @@ tools:
 
 Make sure to replace `<your_API_key>` and `<your_zone>` with your actual Bright Data API key and zone. This configuration ensures that the search tool is properly set up to perform searches during the training process. If you have any questions or need further assistance, feel free to ask!
 
+---
 
 ### 3. ARPO RL Training
 
