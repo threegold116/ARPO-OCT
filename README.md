@@ -82,7 +82,7 @@ We propose **Agentic Reinforced Policy Optimization (ARPO)**, **an agentic RL al
 
 
 
-# 🏃 Quick Start for Training
+## 🏃 Quick Start for Training
 
 ## ❄️ Cold-Start SFT Stage
 
