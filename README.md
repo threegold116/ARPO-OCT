@@ -23,13 +23,12 @@
 🤗 <a href="https://huggingface.co/dongguanting/Qwen2.5-7B-ARPO" target="_blank">Qwen2.5-7B-ARPO</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Llama3.1-8B-ARPO" target="_blank">Llama3.1-8B-ARPO</a> ｜
 🤗 <a href="https://huggingface.co/dongguanting/Qwen3-8B-ARPO-DeepSearch" target="_blank">Qwen3-8B-ARPO-DeepSearch</a> ｜ 
-🤗 <a href="https://huggingface.co/dongguanting/Qwen3-14B-ARPO-DeepSearch" target="_blank">Qwen3-14B-ARPO-DeepSearch</a> 
-  
-  ｜
-  </p>
-  <p align="center">
-🤗 <a href="https://huggingface.co/datasets/dongguanting/Tool-Star-SFT-54K" target="_blank">Tool-Star-SFT-54K</a> ｜
-🤗 <a href="https://huggingface.co/datasets/dongguanting/Multi-Tool-RL-10K" target="_blank">Multi-Tool-RL-10K</a>
+🤗 <a href="https://huggingface.co/dongguanting/Qwen3-14B-ARPO-DeepSearch" target="_blank">Qwen3-14B-ARPO-DeepSearch</a> ｜
+</p>
+<p align="center">
+🤗 <a href="https://huggingface.co/datasets/dongguanting/ARPO-SFT-54K" target="_blank">ARPO-SFT-54K</a> ｜
+🤗 <a href="https://huggingface.co/datasets/dongguanting/ARPO-RL-Reasoning-10K" target="_blank">ARPO-RL-Reasoning-10K</a>
+🤗 <a href="https://huggingface.co/datasets/dongguanting/ARPO-RL-DeepSearch-1K" target="_blank">ARPO-RL-DeepSearch-1K</a>
 </p>
 
 
