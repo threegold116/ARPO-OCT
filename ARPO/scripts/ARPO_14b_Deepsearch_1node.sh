@@ -15,14 +15,14 @@ export MKL_SERVICE_FORCE_INTEL=1
 export MKL_THREADING_LAYER=GNU       
 export RAY_memory_usage_threshold=0.8  
 export RAY_memory_monitor_refresh_ms=0 
-# /mmu_nlp_ssd/dongguanting/DeepResearch/verl/verl/utils/reward_score/deep_research_llm.py
+
 # 设置代理
 export http_proxy=http://oversea-squid2.ko.txyun:11080 
 export https_proxy=http://oversea-squid2.ko.txyun:11080 
 export no_proxy=localhost,127.0.0.1,localaddress,localdomain.com,internal,corp.kuaishou.com,test.gifshow.com,staging.kuaishou.com
 
 # 设置Python路径
-export PYTHONPATH=/mmu_nlp_ssd/dongguanting/ARPO/verl_arpo_entropy:$PYTHONPATH
+export PYTHONPATH=<your_path_to_ARPO>/verl_arpo_entropy:$PYTHONPATH
 
 # ============================ 基础配置 ============================
 # 实验名称与项目
