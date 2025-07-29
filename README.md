@@ -587,7 +587,9 @@ If you find this work helpful, please cite our paper:
       primaryClass={cs.LG},
       url={https://arxiv.org/abs/2507.19849}, 
 }
+```
 
+```bibtex
 @article{dong2025toolstar,
   author       = {Guanting Dong and
                   Yifei Chen and
@@ -612,7 +614,6 @@ If you find this work helpful, please cite our paper:
   biburl       = {https://dblp.org/rec/journals/corr/abs-2505-16410.bib},
   bibsource    = {dblp computer science bibliography, https://dblp.org}
 }
-
 ```
 
 ## 🤝 Acknowledge
