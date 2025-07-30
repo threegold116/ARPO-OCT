@@ -213,7 +213,7 @@ In our paper, we offer two type of train & validation datasets to verify the eff
 
 ### 2.2 API Key Configuration
 
-Our search tool utilizes [Bright Data](https://brightdata.com/). Before starting the training, please replace the API key and zone in the following files: `ARPO/scripts/config/ppo_trainer_dr.yaml` and `ARPO/scripts/config/ppo_trainer.yaml`.
+Our search api tool utilizes [Bright Data](https://brightdata.com/) (A third-party Bing API, without the retirement risk of official Bing API). Before starting the training, please replace the API key and zone in the following files: `ARPO/scripts/config/ppo_trainer_dr.yaml` and `ARPO/scripts/config/ppo_trainer.yaml`.
 
 Additionally, please also replace the API key and zone in the following file: `/verl_arpo_entropy/verl/workers/rollout/tools/config_example.yaml`. Below is the instruction on how to do this:
 
