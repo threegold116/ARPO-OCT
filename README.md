@@ -38,10 +38,9 @@
 ## 📣 Latest News
 
 
-https://www.xiaohongshu.com/explore/68885b6b000000002501bb5e?xsec_token=ABhbOv-GAqL62zxhidTntouED470HN18Wk3e980-_uwtI=&xsec_source=pc_user
 
 - **[July 29, 2025]**: 🔥 We are honored to be featured as **[🤗 Hugging Face Daily Paper #1](https://huggingface.co/papers/2507.19849)**！
-- **[July 29, 2025]**: The brief introduction of ARPO can be found on platforms like **[X](https://x.com/kakakbibibi/status/1950211490943832393), [Xiaohongshu](https://www.xiaohongshu.com/explore/68885b6b000000002501bb5e?xsec_token=ABhbOv-GAqL62zxhidTntouED470HN18Wk3e980-_uwtI=&xsec_source=pc_user)**.
+- **[July 29, 2025]**: The brief introduction of ARPO can be found on platforms like **[X](https://x.com/kakakbibibi/status/1950211490943832393) and [Xiaohongshu](https://www.xiaohongshu.com/explore/68885b6b000000002501bb5e?xsec_token=ABhbOv-GAqL62zxhidTntouED470HN18Wk3e980-_uwtI=&xsec_source=pc_user)**.
 - **[July 29, 2025]**: 📄 Our paper is now available on **[arXiv](https://arxiv.org/abs/2507.19849)** and **[Hugging Face](https://huggingface.co/papers/2507.19849)** daily paper.
 - **[July 25, 2025]**: 🔥 We released all our **ARPO model checkpoints (3B~14B)** and **datasets(SFT, RL, Evaluation)**. Checkout **[🤗ARPO Collection](https://huggingface.co/collections/dongguanting/arpo-688229ff8a6143fe5b4ad8ae)** here. We will keep update it!
 - **[July 25, 2025]**: 🚀 Full codebase released. ARPO supports multi-tool agentic RL training for the Qwen2.5, 3 and Llama3 models. We have implemented extensive tool-call acceleration and memory optimization during RL training. 
