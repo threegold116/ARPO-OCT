@@ -85,9 +85,11 @@ We propose **Agentic Reinforced Policy Optimization (ARPO)**, **an agentic RL al
 
 ## 🏃 Quick Start
 
-Reproducing ARPO requires three steps: cold start fine-tuning, ARPO training, and evaluation. Below, we will provide a detailed explanation.
+Reproducing ARPO requires three steps: cold start fine-tuning (optional), ARPO training, and evaluation. Below, we will provide a detailed explanation.
 
-## ❄️ Cold-Start SFT Stage
+## ❄️ Cold-Start SFT Stage (Optional)
+
+This stage is meant to help you reproduce our experimental results. If your want to RL from scratch, you can skip this stage.
 
 ### 1. Environment Setup
 
