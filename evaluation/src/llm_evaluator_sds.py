@@ -44,7 +44,7 @@ class LLMEvaluator:
         if api_base_url is None:
             api_base_url = "http://localhost:8000/v1"
         if model_name is None:
-            model_name = "/mmu_nlp_ssd/makai05/open_models/Qwen2.5-7B-Instruct"
+            model_name = "<your_model_name>"
 
         self.api_base_url = api_base_url
         self.model_name = model_name
