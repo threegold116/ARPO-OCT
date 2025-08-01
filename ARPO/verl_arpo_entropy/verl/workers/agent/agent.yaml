@@ -20,8 +20,8 @@ agent:
       search:
         class_path: verl.workers.agent.tools.search_tool.BingSearchTool
         params:
-          api_key: 390df65e4949a0b2111f1c47b641fa35f990aa53704765f903e037a2d1236308
-          zone: serp_api1
+          api_key: [your_api_key]
+          zone: [your_zone]
           max_results: 10
           result_length: 1000
           location: cn
