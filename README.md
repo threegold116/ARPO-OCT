@@ -190,7 +190,6 @@ pip3 install flash-attn --no-build-isolation
 
 # install RL basic env
 cd arpo
-pip3 install -e .
 
 # This is our RL env freeze file. You can install it as a supplement or use it for checking.
 pip install -r requirements.txt
