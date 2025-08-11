@@ -582,40 +582,20 @@ bash evaluation/evaluate_passk.sh
 
 If you find this work helpful, please cite our paper:
 ```bibtex
-@article{dong2025agentic,
+@article{dong2025arpo,
   title={Agentic Reinforced Policy Optimization},
   author={Dong, Guanting and Mao, Hangyu and Ma, Kai and Bao, Licheng and Chen, Yifei and Wang, Zhongyuan and Chen, Zhongxia and Du, Jiazhen and Wang, Huiyang and Zhang, Fuzheng and others},
   journal={arXiv preprint arXiv:2507.19849},
   year={2025}
 }
-```
-
-```bibtex
-@article{dong2025toolstar,
-  author       = {Guanting Dong and
-                  Yifei Chen and
-                  Xiaoxi Li and
-                  Jiajie Jin and
-                  Hongjin Qian and
-                  Yutao Zhu and
-                  Hangyu Mao and
-                  Guorui Zhou and
-                  Zhicheng Dou and
-                  Ji{-}Rong Wen},
-  title        = {Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement
-                  Learning},
-  journal      = {CoRR},
-  volume       = {abs/2505.16410},
-  year         = {2025},
-  url          = {https://doi.org/10.48550/arXiv.2505.16410},
-  doi          = {10.48550/ARXIV.2505.16410},
-  eprinttype    = {arXiv},
-  eprint       = {2505.16410},
-  timestamp    = {Thu, 26 Jun 2025 07:49:34 +0200},
-  biburl       = {https://dblp.org/rec/journals/corr/abs-2505-16410.bib},
-  bibsource    = {dblp computer science bibliography, https://dblp.org}
+@article{dong2025tool,
+  title={Tool-Star: Empowering LLM-Brained Multi-Tool Reasoner via Reinforcement Learning},
+  author={Dong, Guanting and Chen, Yifei and Li, Xiaoxi and Jin, Jiajie and Qian, Hongjin and Zhu, Yutao and Mao, Hangyu and Zhou, Guorui and Dou, Zhicheng and Wen, Ji-Rong},
+  journal={arXiv preprint arXiv:2505.16410},
+  year={2025}
 }
 ```
+
 
 ## 🤝 Acknowledge
 
