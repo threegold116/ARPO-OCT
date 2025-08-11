@@ -582,14 +582,11 @@ bash evaluation/evaluate_passk.sh
 
 If you find this work helpful, please cite our paper:
 ```bibtex
-@misc{dong2025arpo,
-      title={Agentic Reinforced Policy Optimization}, 
-      author={Guanting Dong and Hangyu Mao and Kai Ma and Licheng Bao and Yifei Chen and Zhongyuan Wang and Zhongxia Chen and Jiazhen Du and Huiyang Wang and Fuzheng Zhang and Guorui Zhou and Yutao Zhu and Ji-Rong Wen and Zhicheng Dou},
-      year={2025},
-      eprint={2507.19849},
-      archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2507.19849}, 
+@article{dong2025agentic,
+  title={Agentic Reinforced Policy Optimization},
+  author={Dong, Guanting and Mao, Hangyu and Ma, Kai and Bao, Licheng and Chen, Yifei and Wang, Zhongyuan and Chen, Zhongxia and Du, Jiazhen and Wang, Huiyang and Zhang, Fuzheng and others},
+  journal={arXiv preprint arXiv:2507.19849},
+  year={2025}
 }
 ```
 
