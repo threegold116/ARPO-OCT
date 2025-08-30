@@ -15,7 +15,7 @@ export MKL_SERVICE_FORCE_INTEL=1
 export MKL_THREADING_LAYER=GNU       
 export RAY_memory_usage_threshold=0.8  
 export RAY_memory_monitor_refresh_ms=0 
-export RAY_DEBUG_MODE="0"
+export RAY_DEBUG_MODE="1"
 export WANDB_MODE=offline
 # Set Python path
 export PYTHONPATH=/home/sxjiang/myproject/agent/ARPO-OCT/ARPO/verl_arpo_entropy:$PYTHONPATH

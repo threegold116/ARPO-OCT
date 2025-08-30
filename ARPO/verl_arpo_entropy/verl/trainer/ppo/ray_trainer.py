@@ -1022,6 +1022,13 @@ class RayPPOTrainer:
         # we start from step 1
         self.global_steps += 1
         last_val_metrics = None
+        
+        #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
+        if self.config.actor_rollout_ref.rollout.tools.call_limit>4:
+            down_progressive=True
+        else:
+            down_progressive=False
+        
         #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
         if self.config.trainer.progressive_calling_times_stages>0: 
             self.phase_start = 1 #记录上一个progressive开始的位置
@@ -1030,11 +1037,17 @@ class RayPPOTrainer:
                 resume_steps = self.global_steps - 1
                 progressive_calling_steps = int(self.total_training_steps/self.config.trainer.progressive_calling_times_stages)
                 progressive_update_times = resume_steps//progressive_calling_steps
-                self.config.actor_rollout_ref.rollout.tools.call_limit+= progressive_update_times
+                if not down_progressive:
+                    self.config.actor_rollout_ref.rollout.tools.call_limit += progressive_update_times
+                else:
+                    self.config.actor_rollout_ref.rollout.tools.call_limit -= progressive_update_times
                 self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.tools.call_limit)
                 print(f"--------------------------------resume progressive calling times add from {self.config.actor_rollout_ref.rollout.tools.call_limit-progressive_update_times} to {self.config.actor_rollout_ref.rollout.tools.call_limit}--------------------------------")
                 if self.config.actor_rollout_ref.actor.use_oct_cofficient:
-                    self.oct_ctrl.smooth += progressive_update_times
+                    if not down_progressive:
+                        self.oct_ctrl.smooth += progressive_update_times
+                    else:
+                        self.oct_ctrl.smooth -= progressive_update_times
                     print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-progressive_update_times} to {self.oct_ctrl.smooth}--------------------------------")           
                 self.phase_start = 1 + progressive_update_times*progressive_calling_steps
             print(f"-------phase_start: {self.phase_start}-------")
