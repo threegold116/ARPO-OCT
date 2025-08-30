@@ -243,15 +243,20 @@ class vLLMRolloutWithTools(vLLMRollout):
             init_inputs = []
             result_masks = []
             call_counters = []
+            #THREEGOLDCHANGE:add python counter and search counter
+            python_counters = []
+            search_counters = []
             active_indices = []
             
             # 创建初始样本
-            for i, ids in enumerate(prompt_token_ids_list):
+            for i, ids in enumerate(prompt_token_ids_list): #Rollout Initialization
                 for _ in range(initial_rollouts):
                     curr_inputs.append(ids.copy())
                     init_inputs.append(ids.copy())
                     result_masks.append([])
                     call_counters.append(0)
+                    python_counters.append(0)
+                    search_counters.append(0)
                     active_indices.append(len(curr_inputs) - 1)
             
             # Track rollouts per original sample
@@ -281,14 +286,14 @@ class vLLMRolloutWithTools(vLLMRollout):
                         use_tqdm=False
                     )
                 # ========== Entropy Variation Monitoring ==========
-                vocab_size = len(self.tokenizer.get_vocab())
-                entropy_norm_factor = math.log(vocab_size)
+                vocab_size = len(self.tokenizer.get_vocab()) #CHECK: key code
+                entropy_norm_factor = math.log(vocab_size)#除以词表
                 current_entropy_dict = {}
-                for i, out_idx in enumerate(active_indices):
+                for i, out_idx in enumerate(active_indices):#计算熵
                     output = outputs[i]
                     logprobs = []
                     tokens = output.outputs[0].token_ids
-                    for j in range(min(20, len(tokens))):
+                    for j in range(min(20, len(tokens))):#前几个tokens
                         try:
                             logprob_info = output.outputs[0].logprobs[j]
                         except Exception:
@@ -302,7 +307,7 @@ class vLLMRolloutWithTools(vLLMRollout):
                         entropy = 0.0
                     current_entropy_dict[out_idx] = entropy
                     if out_idx not in self.initial_entropy_dict:
-                        self.initial_entropy_dict[out_idx] = entropy
+                        self.initial_entropy_dict[out_idx] = entropy #Rollout Initialization
                 # ============================
 
                 tool_requests: Dict[str, List[Dict]] = {tag: [] for tag in self.tools}
@@ -337,11 +342,15 @@ class vLLMRolloutWithTools(vLLMRollout):
 
                     if is_tool_call:
                         tag = stop_reason.strip("</>")
-                        if call_counters[out_idx] < self.tool_call_limit:
+                        if call_counters[out_idx] < self.tool_call_limit: #TODO:改成progressive_tool_call_limit
                             call_counters[out_idx] += 1
+                            if tag == "python":
+                                python_counters[out_idx] += 1
+                            elif tag == "search":
+                                search_counters[out_idx] += 1
                             full_text = self.tokenizer.decode(curr_inputs[out_idx])
                             content = self._extract_content(full_text, tag)
-                            if content:
+                            if content: #NOTE:调用工具的地方
                                 tool_requests[tag].append({"index": out_idx, "content": content})
                                 next_active_indices.append(out_idx)
                                 # 更新工具调用计数统计
@@ -349,8 +358,8 @@ class vLLMRolloutWithTools(vLLMRollout):
                                 calls_per_tool[tag] += 1
                         else:
                             logger.warning(f"Tool call limit reached for sample {out_idx}. Appending EOS.")
-                            curr_inputs[out_idx].append(eos_token_id)
-                            result_masks[out_idx].append(1)
+                            curr_inputs[out_idx].append(eos_token_id) #还是直接截断
+                            result_masks[out_idx].append(1) #mask的处理
                             tool_metrics["tools/call_limit_reached_count"] += 1
 
                     elif finish_reason == 'length':
@@ -360,7 +369,7 @@ class vLLMRolloutWithTools(vLLMRollout):
                     elif finish_reason == 'stop':  # EOS
                         pass
 
-                if any(tool_requests.values()):
+                if any(tool_requests.values()): #NOTE:调用工具的地方
                     logger.info(f"Processing tool requests: {sum(len(reqs) for reqs in tool_requests.values())} total requests")
                     futures = {}
                     for tag, requests in tool_requests.items():
@@ -419,8 +428,15 @@ class vLLMRolloutWithTools(vLLMRollout):
                             tool_metrics["tools/failed_calls"] += 1
                         
                         logger.debug(f"Tool completion progress: {completed_futures}/{total_futures} ({completed_futures/total_futures*100:.1f}%)")
+                        #THREEGOLDCHANGE:添加observation truncation
+                        result_ids = self.tokenizer.encode(result_text)
+                        if len(result_ids) > self.config.max_obs_length:
+                            print(f"[WARNING] OBSERVATION TOO LONG, CONSIDER CHANGING YOUR CONFIG, {len(result_ids)} & {self.config.max_obs_length}")            
+                            result_ids = result_ids[:self.config.max_obs_length]
+                        result_text = self.tokenizer.decode(result_ids)
+                        #THREEGOLDCHANGE:添加observation truncation
                         formatted_result = f" <result>\n{result_text}\n</result>"
-                        result_tokens = self.tokenizer.encode(formatted_result)
+                        result_tokens = self.tokenizer.encode(formatted_result) #TODO: add observation truncation
                         logger.debug(f"Result for tool({tag}), sample {idx} tokenized to {len(result_tokens)} tokens")
                         curr_inputs[idx].extend(result_tokens)
                         result_masks[idx].extend([0] * len(result_tokens))
@@ -431,12 +447,15 @@ class vLLMRolloutWithTools(vLLMRollout):
                     if response_len < max_len:
                         final_active_indices.append(idx)
                 
-                # Apply beam search: split active samples into multiple branches
+                # Apply beam search: split active samples into multiple branches #NOTE:Entropy-based Adaptive Beaming
                 new_indices = []
                 new_inputs = []
                 new_init_inputs = []
                 new_result_masks = []
                 new_call_counters = []
+                #THREEGOLDCHANGE:add python counter and search counter
+                new_python_counters = []
+                new_search_counters = []
                 new_sample_origins = []  # 记录每个新分支对应的原始样本
                 
                 # Map from original sample index to its active rollouts
@@ -446,13 +465,13 @@ class vLLMRolloutWithTools(vLLMRollout):
                     orig_sample = None
                     for sample_idx, indices in sample_to_indices.items():
                         if idx in indices:
-                            orig_sample = sample_idx
+                            orig_sample = sample_idx #上一次分支的起点是哪个样本
                             break
                     
                     if orig_sample is not None:
                         if orig_sample not in active_by_sample:
                             active_by_sample[orig_sample] = []
-                        active_by_sample[orig_sample].append(idx)
+                        active_by_sample[orig_sample].append(idx) #现在active的轨迹和对应的起点样本
                 
         
                 for orig_sample, active_idxs in active_by_sample.items():
@@ -460,7 +479,7 @@ class vLLMRolloutWithTools(vLLMRollout):
                     if remaining_slots <= 0:
                         continue
                     branches_created = 0
-                    for source_idx in active_idxs:
+                    for source_idx in active_idxs: #现在要分支的样本,也不是按照大小而是按照顺序+采样
                         branches_per_idx = min(beam_size - 1, remaining_slots - branches_created)
                         if branches_per_idx <= 0:
                             break
@@ -470,16 +489,20 @@ class vLLMRolloutWithTools(vLLMRollout):
                             entropy_now = current_entropy_dict.get(source_idx, 0.0)
                             entropy_init = self.initial_entropy_dict.get(source_idx, 0.0)
                             entropy_delta = entropy_now - entropy_init
-                            prob = random.random() - self.entropy_weight * entropy_delta
+                            prob = random.random() - self.entropy_weight * entropy_delta #公式(5)
                     
                             prob = max(0.0, min(1.0, prob))
-                            if prob > self.branch_probability: 
+                            if prob > self.branch_probability:  #为什么是大于跳过？
                                 continue
                             # ==== END ====
                             new_inputs.append(curr_inputs[source_idx].copy())
                             new_init_inputs.append(init_inputs[source_idx].copy())
                             new_result_masks.append(result_masks[source_idx].copy())
                             new_call_counters.append(call_counters[source_idx])
+                            #THREEGOLDCHANGE:add python counter and search counter
+                            new_python_counters.append(python_counters[source_idx])
+                            new_search_counters.append(search_counters[source_idx])
+                            #THREEGOLDCHANGE
                             new_sample_origins.append(orig_sample)
                             rollouts_per_sample[orig_sample] += 1
                             branches_created += 1
@@ -504,17 +527,24 @@ class vLLMRolloutWithTools(vLLMRollout):
                             new_init_inputs.append(init_inputs[source_idx].copy())
                             new_result_masks.append([])
                             new_call_counters.append(0)
+                            #THREEGOLDCHANGE:add python counter and search counter
+                            new_python_counters.append(0)
+                            new_search_counters.append(0)
+                            #THREEGOLDCHANGE
                             new_sample_origins.append(orig_sample)  # 记录原始样本
                             rollouts_per_sample[orig_sample] += 1
                 
                 # Add new branches to existing lists
-                if new_inputs:
-                    start_idx = len(curr_inputs)
+                if new_inputs: #如果有beam，则添加到现在的输出里面
+                    start_idx = len(curr_inputs) #新的batch内索引
                     curr_inputs.extend(new_inputs)
                     init_inputs.extend(new_init_inputs)
                     result_masks.extend(new_result_masks)
                     call_counters.extend(new_call_counters)
-                    
+                    # THREEGOLDCHANGE:add python counter and search counter
+                    python_counters.extend(new_python_counters)
+                    search_counters.extend(new_search_counters)
+                    # THREEGOLDCHANGE
                     # Add new indices to active list
                     final_active_indices.extend(range(start_idx, start_idx + len(new_inputs)))
                     
@@ -584,7 +614,11 @@ class vLLMRolloutWithTools(vLLMRollout):
                             non_tensor_batch[key] = np.repeat(value, num_samples, axis=0)
                         elif isinstance(value, list):
                             non_tensor_batch[key] = [item for item in value for _ in range(num_samples)]
-
+            #THREEGOLDCHANGE:add python counter and search counter
+            non_tensor_batch["python_counters"] = np.array(python_counters)
+            non_tensor_batch["search_counters"] = np.array(search_counters)
+            #THREEGOLDCHANGE
+            
             final_batch_size = input_ids.size(0)
             seq = torch.cat([input_ids, response], dim=-1)
 
@@ -643,3 +677,6 @@ class vLLMRolloutWithTools(vLLMRollout):
         data_proto = DataProto(batch=batch, non_tensor_batch=non_tensor_batch, meta_info=meta_info)
 
         return data_proto
+    def update_max_calling_times(self,max_calling_times):
+        print(f"--------------------------------update max calling times from {self.config.max_calling_times} to {max_calling_times}--------------------------------")
+        self.config.tools.call_limit = max_calling_times

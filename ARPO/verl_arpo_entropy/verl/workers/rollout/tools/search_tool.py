@@ -477,26 +477,183 @@ class BingSearchTool(BaseTool):
         return "\n".join(formatted)
 
 
+
+
+class WikiSearchTool(BaseTool):
+    """
+    Wiki search tool that provides wikipeida search capability with caching.
+
+    This tool interfaces with the local flashrag to perform Wiki searches.
+    It includes robust caching to minimize redundant API calls and supports
+    both synchronous and asynchronous cache writing modes.
+    
+    Thread-safety is ensured via memory locks, and process-safety via file locks
+    for the cache file.
+    """
+
+    def __init__(
+        self,
+        api_key: str = "",
+        zone: str = "serp_api1",
+        max_results: int = 10,
+        result_length: int = 1000,
+        location: str = "cn",
+        cache_file: Optional[str] = None,
+        async_cache_write: bool = True,
+        cache_refresh_interval: float = 15.0
+    ):
+        """
+        Initialize the Bing search tool.
+        
+        Args:
+            api_key: Brightdata API key
+            zone: Brightdata zone name
+            max_results: Maximum number of search results to return
+            result_length: Maximum length of each result snippet
+            location: Country code for search localization
+            cache_file: Path to cache file (if None, uses ~/.verl_cache/bing_search_cache.json)
+            async_cache_write: Whether to write cache updates asynchronously
+            cache_refresh_interval: Minimum seconds between cache file checks
+        """
+        # API configuration
+        self._api_key = api_key
+        self._zone = zone
+        self._max_results = max_results
+        self._result_length = result_length
+        self._location = location
+        
+        # Cache and synchronization
+        self._cache = {}
+        self._cache_lock = threading.Lock()
+        self._async_cache_write = async_cache_write
+        self._write_queue = queue.Queue() if async_cache_write else None
+        self._cache_refresh_interval = cache_refresh_interval
+        self._last_cache_check = 0.0
+        self._cache_mod_time = 0.0
+        self.local_search_url = os.getenv("LOCAL_SEARCH_URL", "http://0.0.0.0:8009/")
+    @property
+    def name(self) -> str:
+        """Tool name identifier."""
+        return "bing_search"
+
+    @property
+    def trigger_tag(self) -> str:
+        """Tag used to trigger this tool."""
+        return "search"
+
+    def _make_request(self, query: str, timeout: int) -> requests.Response:
+        """
+        Send request to Local FlashRAG.
+
+        Args:
+            query: Search query
+            timeout: Request timeout in seconds
+
+        Returns:
+            API response object
+        """
+        url = f'{self.local_search_url}search' #your local search path
+        data = {'query': query, 'top_n': self._max_results}
+        response = requests.post(url, json=data)
+        # Send request
+        return response
+    def execute(self, query: str, timeout: int = 60) -> str:
+        """
+        Execute Bing search query.
+
+        Args:
+            query: Search query string
+            timeout: API request timeout in seconds
+
+        Returns:
+            Formatted search results as string
+        """
+        # Clean query
+        query = query.replace('"', '')
+        
+        
+
+        try:
+            # Make API request
+            response = self._make_request(query, timeout)
+
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code}: {response.text}"
+                print(error_msg)
+                raise Exception(error_msg)
+
+            # Parse response JSON
+            data = json.loads(response.text)
+
+            # Extract search results
+            result = self._extract_and_format_results(data)
+                
+            return result
+
+        except Exception as e:
+            error_msg = f"Bing search failed: {str(e)}"
+            print(error_msg)
+            return ""
+    
+    def _extract_and_format_results(self, data: Dict) -> str:
+        """
+        Extract and format search results from API response.
+        
+        Args:
+            data: API response data
+            
+        Returns:
+            Formatted search results as string
+        """
+        # Extract unique snippets
+        chunk_content_list = []
+        for line in data:
+            chunk_content_list.append(line['contents'])
+        return "\n\n".join(chunk_content_list).strip()
+
+    def _format_results(self, results: Dict) -> str:
+        """
+        Format search results into readable text.
+        
+        Args:
+            results: Dictionary containing search results
+            
+        Returns:
+            Formatted string of search results
+        """
+        if not results.get("chunk_content"):
+            return "No search results found."
+
+        formatted = []
+        for idx, snippet in enumerate(results["chunk_content"][:self._max_results], 1):
+            snippet = snippet[:self._result_length]
+            formatted.append(f"Page {idx}: {snippet}")
+        
+        return "\n".join(formatted)
+
 if __name__ == "__main__":
     import sys
     
     # Add parent directory to path for testing
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    # Test configuration
-    cache_file = "<your_search_cache_dir>"
-    api_key = "<your_api_key>"
-    zone = "<your_zone>"
+    # # Test configuration
+    # cache_file = "<your_search_cache_dir>"
+    # api_key = "<your_api_key>"
+    # zone = "<your_zone>"
     
-    # Create search tool instance
-    search_tool = BingSearchTool(
-        api_key=api_key, 
-        zone=zone, 
-        cache_file=cache_file
+    # # Create search tool instance
+    # search_tool = BingSearchTool(
+    #     api_key=api_key, 
+    #     zone=zone, 
+    #     cache_file=cache_file
+    # )
+    
+    search_tool = WikiSearchTool(
     )
 
     # Test query
-    query = "甄嬛传导演"
+    query = "Jackie Chen"
     print(f"Searching for: {query}")
 
     # Execute search

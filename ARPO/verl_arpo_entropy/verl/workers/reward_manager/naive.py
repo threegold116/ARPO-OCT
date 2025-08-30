@@ -23,11 +23,17 @@ from verl.utils.reward_score import default_compute_score
 class NaiveRewardManager:
     """The reward manager."""
 
-    def __init__(self, tokenizer, num_examine, compute_score=None, reward_fn_key="data_source") -> None:
+    def __init__(self, tokenizer, num_examine, compute_score=None, reward_fn_key="data_source",mix_rules=False,qa_rule="f1_score",math_rule="em_score",is_multi_tool=False,binary_f1_threshold=0.5) -> None:
         self.tokenizer = tokenizer
         self.num_examine = num_examine  # the number of batches of decoded responses to print to the console
         self.compute_score = compute_score or default_compute_score
         self.reward_fn_key = reward_fn_key
+        # THREEGOLDCHANGE:增加mix rules和qa_mode
+        self.mix_rules = mix_rules
+        self.qa_rule = qa_rule
+        self.math_rule = math_rule
+        self.is_multi_tool = is_multi_tool
+        self.binary_f1_threshold = binary_f1_threshold
 
     def __call__(self, data: DataProto, return_dict=False):
         """We will expand this function gradually based on the available datasets"""
@@ -70,12 +76,23 @@ class NaiveRewardManager:
             # add tokenizer to extra_info if not exists
             if extra_info is None or extra_info.get("tokenizer") is None:
                 extra_info = {"tokenizer": self.tokenizer}
-
+            # THREEGOLDCHANGE:增加对工具调用的统计
+            abality = data_item.non_tensor_batch.get("ability", None)
+            # THREEGOLDCHANGE
+            
+            
             score = self.compute_score(
                 data_source=data_source,
                 solution_str=response_str,
                 ground_truth=ground_truth,
                 extra_info=extra_info,
+                # THREEGOLDCHANGE
+                abality=abality,
+                mix_rules=self.mix_rules,
+                qa_rule=self.qa_rule,
+                is_multi_tool=self.is_multi_tool,
+                binary_f1_threshold=self.binary_f1_threshold
+                # THREEGOLDCHANGE
             )
 
             if isinstance(score, dict):

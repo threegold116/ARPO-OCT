@@ -211,7 +211,42 @@ def compute_response_mask(data: DataProto):
     response_length = responses.size(1)
     attention_mask = data.batch["attention_mask"]
     return attention_mask[:, -response_length:]
-
+#THREEGOLDCHANGE:计算oct奖励
+def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct'):
+    token_level_scores = data.batch['token_level_scores']
+    no_positive_penalty = oct_ctrl.no_positive_penalty
+    # compute the oct reward cofficent
+    if oct_penalty == 'times':
+        old,avg_call_times,max_calling_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
+        print(f"old: {old}")
+        oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
+    elif oct_penalty == 'budget':
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty)  # (batch_size, response_length)
+        print(f"old: {old}")
+        if no_positive_penalty:
+            oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+        else:#TODO:oct_ctrl.coffoicient如果不为1，对结果的影响
+            oct_token_level_scores = token_level_scores.clone()
+            for idx, old_value in enumerate(old):
+                #THREEGOLDCHANGE:copy from advantage calcute 
+                prompt_ids = data[idx].batch['prompts']
+                prompt_length = prompt_ids.shape[-1]
+                valid_response_length = data[idx].batch['attention_mask'][prompt_length:].sum()
+                score = oct_token_level_scores[idx][valid_response_length - 1]
+                if torch.sum(token_level_scores[idx])> 0:
+                    oct_token_level_scores[idx][valid_response_length - 1] = score * old_value *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+                elif torch.sum(token_level_scores[idx])==0:
+                    oct_token_level_scores[idx][valid_response_length - 1] = old_value *oct_ctrl.cofficient - 1 #(bz,response_length)*(bz,1) for last-token score
+                else:
+                    pass
+                    #no penalty for format error
+        metrics = {'rollout/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
+    else:
+        raise NotImplementedError
+    data.batch['token_level_scores'] = oct_token_level_scores
+    return data, metrics
+#THREEGOLDCHANGE
 
 def compute_advantage(data: DataProto, adv_estimator, gamma=1.0, lam=1.0, num_repeat=1, multi_turn=False, norm_adv_by_std_in_grpo=True, **kwargs):
     """Compute advantage estimates for policy optimization.
@@ -411,7 +446,14 @@ class RayPPOTrainer:
             self.use_critic = False
         else:
             raise NotImplementedError
-
+        #THREEGOLDCHANGE
+        #define oct control
+        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+            self.oct_ctrl = core_algos.OctController(init_cofficient=config.actor_rollout_ref.actor.oct_coef,
+                                                    init_smooth=config.actor_rollout_ref.actor.oct_smooth,
+                                                    no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
+                                                    tokenizer=self.tokenizer)
+        #THREEGOLDCHANGE:this is oct init
         self._validate_config()
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
 
@@ -593,7 +635,7 @@ class RayPPOTrainer:
         except Exception as e:
             print(f"Warning: Could not set total_training_steps in config. Structure missing? Error: {e}")
 
-    def _dump_generations(self, inputs, outputs, scores, reward_extra_infos_dict, dump_path):
+    def _dump_generations(self, inputs, outputs, scores, reward_extra_infos_dict, dump_path, search_times=None, python_times=None, cost_dict_list=None):
         """Dump rollout/validation samples as JSONL."""
         os.makedirs(dump_path, exist_ok=True)
         filename = os.path.join(dump_path, f"{self.global_steps}.jsonl")
@@ -613,6 +655,12 @@ class RayPPOTrainer:
         with open(filename, "w") as f:
             for i in range(n):
                 entry = {k: v[i] for k, v in base_data.items()}
+                if search_times is not None:
+                    entry["search_times"] = search_times[i].item()
+                if python_times is not None:
+                    entry["python_times"] = python_times[i].item()
+                if cost_dict_list is not None:
+                    entry["cost_dict"] = cost_dict_list[i]
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
         print(f"Dumped generations to {filename}")
@@ -944,7 +992,8 @@ class RayPPOTrainer:
         from omegaconf import OmegaConf
 
         from verl.utils.tracking import Tracking
-
+        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+            breakpoint()
         logger = Tracking(
             project_name=self.config.trainer.project_name,
             experiment_name=self.config.trainer.experiment_name,
@@ -973,7 +1022,22 @@ class RayPPOTrainer:
         # we start from step 1
         self.global_steps += 1
         last_val_metrics = None
-
+        #THREEGOLDCHANGE: progressive calling times TODO:Check oct_ctrl和progressive_calling_steps的更新
+        if self.config.trainer.progressive_calling_times_stages>0: 
+            self.phase_start = 1 #记录上一个progressive开始的位置
+            #说明时resume训练
+            if self.global_steps>1:
+                resume_steps = self.global_steps - 1
+                progressive_calling_steps = int(self.total_training_steps/self.config.trainer.progressive_calling_times_stages)
+                progressive_update_times = resume_steps//progressive_calling_steps
+                self.config.actor_rollout_ref.rollout.tools.call_limit+= progressive_update_times
+                self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.tools.call_limit)
+                print(f"--------------------------------resume progressive calling times add from {self.config.actor_rollout_ref.rollout.tools.call_limit-progressive_update_times} to {self.config.actor_rollout_ref.rollout.tools.call_limit}--------------------------------")
+                if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                    self.oct_ctrl.smooth += progressive_update_times
+                    print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-progressive_update_times} to {self.oct_ctrl.smooth}--------------------------------")           
+                self.phase_start = 1 + progressive_update_times*progressive_calling_steps
+            print(f"-------phase_start: {self.phase_start}-------")
         for epoch in range(self.config.trainer.total_epochs):
             for batch_dict in self.train_dataloader:
                 metrics = {}
@@ -1047,7 +1111,8 @@ class RayPPOTrainer:
                         if self.use_rm:
                             reward_tensor = self.rm_wg.compute_rm_score(batch)
                             batch = batch.union(reward_tensor)
-
+                        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                            breakpoint()
                         if self.config.reward_model.launch_reward_fn_async:
                             future_reward = compute_reward_async.remote(batch, self.config, self.tokenizer)
                         else:
@@ -1117,7 +1182,19 @@ class RayPPOTrainer:
                         print(f"{list(reward_extra_infos_dict.keys())=}")
                         if reward_extra_infos_dict:
                             batch.non_tensor_batch.update({k: np.array(v) for k, v in reward_extra_infos_dict.items()})
-
+                        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                            breakpoint()
+                        # THREEGOLDCHANGE: 计算oct折扣因子
+                        # apply oct_penalty if availale:
+                        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                            batch, oct_metrics = apply_oct_penalty(batch,
+                                                                 oct_ctrl=self.oct_ctrl,
+                                                                 oct_penalty=self.config.algorithm.oct_penalty,
+                                                                 )
+                            metrics.update(oct_metrics) #TODO: 增加对calling_times的logging
+                        else:
+                            batch.batch['token_level_scores'] = batch.batch['token_level_scores']
+                        # THREEGOLDCHANGE
                         # compute rewards. apply_kl_penalty if available
                         if self.config.algorithm.use_kl_in_reward:
                             batch, kl_metrics = apply_kl_penalty(batch, kl_ctrl=self.kl_ctrl_in_reward, kl_penalty=self.config.algorithm.kl_penalty)
@@ -1192,14 +1269,21 @@ class RayPPOTrainer:
                     if rollout_data_dir:
                         with _timer("dump_rollout_generations", timing_raw):
                             print(batch.batch.keys())
-                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=True)
-                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=True)
+                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=False)
+                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=False)
+                            #THREEGOLDCHANGE: python search dump
+                            search_times = batch.non_tensor_batch.get("search_counters",None)
+                            python_times = batch.non_tensor_batch.get("python_counters",None)
+                            cost_dict_list = batch.non_tensor_batch.get("cost_dict",None)
                             scores = batch.batch["token_level_scores"].sum(-1).cpu().tolist()
                             self._dump_generations(
                                 inputs=inputs,
                                 outputs=outputs,
                                 scores=scores,
                                 reward_extra_infos_dict=reward_extra_infos_dict,
+                                search_times=search_times,
+                                python_times=python_times,
+                                cost_dict_list=cost_dict_list,
                                 dump_path=rollout_data_dir,
                             )
 
@@ -1231,10 +1315,38 @@ class RayPPOTrainer:
 
                 # TODO: make a canonical logger that supports various backend
                 logger.log(data=metrics, step=self.global_steps)
-
+                # THREEGOLDCHANGE: Print timing_raw
+                print(f"step {self.global_steps} timing_raw:")
+                for key,value in timing_raw.items():
+                    print(f'{key}: {value}')
                 progress_bar.update(1)
                 self.global_steps += 1
                 if is_last_step:
                     pprint(f"Final validation metrics: {last_val_metrics}")
                     progress_bar.close()
                     return
+                # THREEGOLDCHANGE: progressive calling times
+                if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+                    breakpoint()
+                if self.config.trainer.progressive_calling_times_stages>0:
+                    if self.global_steps - self.phase_start >= self.total_training_steps * (1/self.config.trainer.progressive_calling_times_stages):
+                        print(f"-------phase_start: {self.phase_start}-------")
+                        print(f"-------global_steps: {self.global_steps}-------")
+                        
+                        self.phase_start = self.global_steps
+                        if not down_progressive:
+                            self.config.actor_rollout_ref.rollout.tools.call_limit += 1
+                            print(f"--------------------------------progressive calling times add from {self.config.actor_rollout_ref.rollout.tools.call_limit-1} to {self.config.actor_rollout_ref.rollout.tools.call_limit}--------------------------------")
+                        else:
+                            self.config.actor_rollout_ref.rollout.tools.call_limit -= 1
+                            print(f"--------------------------------progressive calling times add from {self.config.actor_rollout_ref.rollout.tools.call_limit+1} to {self.config.actor_rollout_ref.rollout.tools.call_limit}--------------------------------")
+                        self.actor_rollout_wg.rollout_update_max_calling_times(self.config.actor_rollout_ref.rollout.tools.call_limit)
+                        if self.config.actor_rollout_ref.actor.use_oct_cofficient:
+                            if not down_progressive:
+                                self.oct_ctrl.smooth += 1
+                                print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth-1} to {self.oct_ctrl.smooth}--------------------------------")
+                            else:
+                                self.oct_ctrl.smooth -= 1
+                                print(f"--------------------------------oct smooth add from {self.oct_ctrl.smooth+1} to {self.oct_ctrl.smooth}--------------------------------")                                                    
+                # THREEGOLDCHANGE: progressive calling times
+
