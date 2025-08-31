@@ -7,6 +7,7 @@ data:
   reward_fn_key: data_source
   max_prompt_length: 512
   max_response_length: 512
+  max_obs_length: 512
   train_batch_size: 1024
   val_batch_size: null
   return_raw_input_ids: False  # This should be set to true when the tokenizer between policy and rm differs
@@ -58,6 +59,12 @@ actor_rollout_ref:
     use_torch_compile: True # False to disable torch compile
     kl_loss_coef: 0.001 # for grpo
     kl_loss_type: low_var_kl # for grpo
+    #THREEGOLDCHANGE
+    use_oct_cofficient: False # True for OCT
+    oct_coef: 1 # for OCT(alpha)
+    oct_smooth: ${actor_rollout_ref.rollout.tools.call_limit} # same with max_calling_times
+    no_positive_penalty: True # True for OCT
+    #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False
     ulysses_sequence_parallel_size: 1 # sp size
@@ -117,6 +124,7 @@ actor_rollout_ref:
     max_num_batched_tokens: 8192
     max_model_len: null
     max_num_seqs: 1024
+    max_obs_length: ${data.max_obs_length}
     log_prob_micro_batch_size: null # will be deprecated, use log_prob_micro_batch_size_per_gpu
     log_prob_micro_batch_size_per_gpu: null
     log_prob_use_dynamic_bsz: ${actor_rollout_ref.actor.use_dynamic_bsz}
@@ -162,19 +170,18 @@ actor_rollout_ref:
         python:  
           class_path: verl.workers.rollout.tools.python_tool.PythonTool  # 工具类路径
           params:  # 工具特定参数
-            conda_path: <your_conda_path>
-            conda_env: verl
+            conda_path: /home/sxjiang/miniconda3 #THREEGOLD
+            conda_env: arpo #THREEGOLD
         
         search:
-          class_path: verl.workers.rollout.tools.search_tool.BingSearchTool
+          class_path: verl.workers.rollout.tools.search_tool.WikiSearchTool
           params:
-            api_key: <your_api_key>
-            zone: <your_zone>
-            max_results: 10
+            max_results: 3
             result_length: 1000
             location: cn
             cache_file: <your_search_cache_path>
             async_cache_write: true
+            api_key: <your_API_key>
 
 critic:
   rollout_n: ${actor_rollout_ref.rollout.n}
@@ -250,6 +257,13 @@ reward_model:
   forward_max_token_len_per_gpu: ${critic.forward_max_token_len_per_gpu}
   reward_manager: naive
   launch_reward_fn_async: False # custom reward function executed async on CPU, during log_prob
+  #THREEGOLDCHANGE
+  mix_rules: False
+  math_rule: em_score
+  qa_rule: f1_score
+  is_multi_tool: False
+  binary_f1_threshold: 0.5
+  #THREEGOLDCHANGE
   sandbox_fusion:
     url: null # faas url to run code in cloud sandbox
     max_concurrent: 64 # max concurrent requests to sandbox
@@ -264,6 +278,9 @@ algorithm:
   norm_adv_by_std_in_grpo: True
   use_kl_in_reward: False
   kl_penalty: kl  # how to estimate kl divergence
+  #THREEGOLDCHANGE
+  oct_penalty: times  # how to estimate oct divergence
+  #THREEGOLDCHANGE
   kl_ctrl:
     type: fixed
     kl_coef: 0.001
@@ -301,6 +318,9 @@ trainer:
   # The timeout for ray worker group to wait for the register center to be ready
   ray_wait_register_center_timeout: 300
   device: cuda
+  #THREEGOLDCHANGE
+  progressive_calling_times_stages: 3
+  #THREEGOLDCHANGE
 
 ray_init:
   num_cpus: null # `None` means using all CPUs, which might cause hang if limited in systems like SLURM. Please set to a number allowed then.

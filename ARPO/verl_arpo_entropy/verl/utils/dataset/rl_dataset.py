@@ -20,7 +20,7 @@ import os
 import re
 from collections import defaultdict
 from typing import List, Optional, Union
-
+import random #THREEGOLDCHANGE
 import datasets
 import numpy as np
 import torch
@@ -184,11 +184,28 @@ class RLHFDataset(Dataset):
         """
         row_dict: dict = self.dataframe[item]
         messages = self._build_messages(row_dict)
+        #THREEGOLDCHANGE
+        new_messages = []
+        cost_dict = {}
+        for message in messages:
+            if message["role"] == "system":
+                python_cost = random.randint(1, 10)
+                search_cost = random.randint(1, 10)
+                row_dict['python_cost'] = torch.tensor(python_cost)
+                row_dict['search_cost'] = torch.tensor(search_cost)
+                if "[python_cost]" in message["content"]:
+                    message["content"] = message["content"].replace("[python_cost]", str(python_cost))
+                if "[search_cost]" in message["content"]:
+                    message["content"] = message["content"].replace("[search_cost]", str(search_cost))
+                cost_dict = {'python_cost': python_cost, 'search_cost': search_cost}
+            new_messages.append(message)
+        messages = new_messages
+        #THREEGOLDCHANGE
         model_inputs = {}
-
         if self.processor is not None:
             from verl.utils.dataset.vision_utils import process_image, process_video
-
+        
+           
             raw_prompt = self.processor.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
             multi_modal_data = {}
 
@@ -216,8 +233,9 @@ class RLHFDataset(Dataset):
 
             # second_per_grid_ts isn't used for training, just for mrope
             row_dict["multi_modal_inputs"].pop("second_per_grid_ts", None)
+            
 
-        else:
+        else:#TODO: add prompt and rebuild data
             raw_prompt = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
             model_inputs = self.tokenizer(raw_prompt, return_tensors="pt", add_special_tokens=False)
             input_ids = model_inputs.pop("input_ids")
@@ -283,6 +301,7 @@ class RLHFDataset(Dataset):
             logger.warning(f"tools_kwargs is empty for index {index}, data source: {row_dict['data_source']}")
         row_dict["index"] = index
         row_dict["tools_kwargs"] = tools_kwargs
+        row_dict["cost_dict"] = cost_dict
         return row_dict
 
     def __getstate__(self):

@@ -12,14 +12,22 @@ tools:
     python:  
       class_path: verl.workers.rollout.tools.python_tool.PythonTool  # Tool class path
       params:  # Tool-specific parameters
-        conda_path: /path/to/conda
-        conda_env: verl
+        conda_path: /home/sxjiang/miniconda3
+        conda_env: arpo
     
+    # search:
+    #   class_path: verl.workers.rollout.tools.search_tool.BingSearchTool
+    #   params:
+    #     api_key: <your_API_key>
+    #     zone: <your_zone>
+    #     max_results: 10
+    #     result_length: 1000
+    #     location: cn
     search:
       class_path: verl.workers.rollout.tools.search_tool.BingSearchTool
       params:
         api_key: <your_API_key>
         zone: <your_zone>
-        max_results: 10
+        max_results: 3
         result_length: 1000
         location: cn

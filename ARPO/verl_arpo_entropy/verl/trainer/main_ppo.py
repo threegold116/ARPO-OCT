@@ -18,10 +18,13 @@ Note that we don't combine the main with ray_trainer as ray_trainer is used by o
 
 import hydra
 import ray
-
+import os
 from verl.trainer.ppo.ray_trainer import RayPPOTrainer
 from verl.trainer.ppo.reward import load_reward_manager
-
+#THREEGOLDCHANGE: 设置随机种子  
+import random
+random.seed(42)
+#THREEGOLDCHANGE
 
 @hydra.main(config_path="config", config_name="ppo_trainer", version_base=None)
 def main(config):
@@ -30,11 +33,49 @@ def main(config):
 
 def run_ppo(config) -> None:
     if not ray.is_initialized():
+        if "0" in os.environ.get("RAY_DEBUG_MODE","0"):
+            info=ray.init(
+                address="local",
+                logging_level="debug",
+                runtime_env={'env_vars': 
+                    {'TOKENIZERS_PARALLELISM': 'true', 
+                    'NCCL_DEBUG': 'WARN',
+                    'VLLM_LOGGING_LEVEL': 'WARN', 
+                    "VLLM_ALLOW_RUNTIME_LORA_UPDATING": "true"
+                    # 'RAY_DEBUG_POST_MORTEM': '1',
+                    # "RAY_DEBUG":"1"
+                    }
+                    },
+                num_cpus=config.ray_init.num_cpus,
+                )
+            print("no debug mode")
+        else:
+            info=ray.init(
+                address="local",
+                logging_level="debug",
+                runtime_env={'env_vars': 
+                    {'TOKENIZERS_PARALLELISM': 'true', 
+                    'NCCL_DEBUG': 'WARN',
+                    'RAY_DEBUG_POST_MORTEM': '1',
+                    "RAY_DEBUG":"1",
+                    'VLLM_LOGGING_LEVEL': 'WARN', 
+                    "VLLM_ALLOW_RUNTIME_LORA_UPDATING": "true"
+                    }
+                    },
+                num_cpus=config.ray_init.num_cpus,
+                )
+        print(info)
+        print(f"ray debug mode:{os.getenv('RAY_DEBUG_MODE')}")
+        
         # this is for local ray cluster
-        ray.init(
-            runtime_env={"env_vars": {"TOKENIZERS_PARALLELISM": "true", "NCCL_DEBUG": "WARN", "VLLM_LOGGING_LEVEL": "WARN", "VLLM_ALLOW_RUNTIME_LORA_UPDATING": "true"}},
-            num_cpus=config.ray_init.num_cpus,
-        )
+        # ray.init(
+        #     runtime_env={"env_vars": {
+        #         "TOKENIZERS_PARALLELISM": "true", 
+        #         "NCCL_DEBUG": "WARN", 
+        #         "VLLM_LOGGING_LEVEL": "WARN", 
+        #         "VLLM_ALLOW_RUNTIME_LORA_UPDATING": "true"}},
+        #     num_cpus=config.ray_init.num_cpus,
+        # )
 
     runner = TaskRunner.remote()
     ray.get(runner.run.remote(config))
@@ -44,6 +85,8 @@ def run_ppo(config) -> None:
 class TaskRunner:
     def run(self, config):
         # print initial config
+        if "1" in os.environ.get("RAY_DEBUG_MODE","0"):
+            breakpoint()
         from pprint import pprint
 
         from omegaconf import OmegaConf
@@ -127,9 +170,15 @@ class TaskRunner:
         if config.algorithm.use_kl_in_reward or config.actor_rollout_ref.actor.use_kl_loss:
             role_worker_mapping[Role.RefPolicy] = ray.remote(ActorRolloutRefWorker)
             mapping[Role.RefPolicy] = global_pool_id
-
-        reward_fn = load_reward_manager(config, tokenizer, num_examine=0, **config.reward_model.get("reward_kwargs", {}))
-        val_reward_fn = load_reward_manager(config, tokenizer, num_examine=1, **config.reward_model.get("reward_kwargs", {}))
+        # THREEGOLDCHANGE:增加mix rules和qa_mode，只考虑re_search reward manager的情况
+        mix_rules = config.reward_model.get('mix_rules', False)
+        qa_rule = config.reward_model.get('qa_rule', "f1_score")
+        math_rule = config.reward_model.get('math_rule', "em_score")
+        is_multi_tool = config.reward_model.get('is_multi_tool', False)
+        binary_f1_threshold = config.reward_model.get('binary_f1_threshold', 0.5)
+        # THREEGOLDCHANGE
+        reward_fn = load_reward_manager(config, tokenizer, num_examine=0,mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold, **config.reward_model.get("reward_kwargs", {}))
+        val_reward_fn = load_reward_manager(config, tokenizer, num_examine=1,mix_rules=mix_rules,qa_rule=qa_rule,math_rule=math_rule,is_multi_tool=is_multi_tool,binary_f1_threshold=binary_f1_threshold, **config.reward_model.get("reward_kwargs", {}))
         resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
 
         from verl.utils.dataset.rl_dataset import collate_fn

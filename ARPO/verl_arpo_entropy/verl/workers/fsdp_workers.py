@@ -650,6 +650,8 @@ class ActorRolloutRefWorker(Worker):
 
     @register(dispatch_mode=Dispatch.DP_COMPUTE_PROTO)
     def generate_sequences(self, prompts: DataProto):
+        if "2" in os.environ.get("RAY_DEBUG_MODE","0") and self.rank == 0:
+            breakpoint()
         # Support all hardwares
         prompts = prompts.to(get_torch_device().current_device())
 
@@ -805,7 +807,9 @@ class ActorRolloutRefWorker(Worker):
 
         if self._is_offload_optimizer:
             offload_fsdp_optimizer(self.actor_optimizer)
-
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def rollout_update_max_calling_times(self,max_calling_times):
+        self.rollout.update_max_calling_times(max_calling_times)
 
 class CriticWorker(Worker):
     def __init__(self, config):

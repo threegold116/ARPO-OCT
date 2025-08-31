@@ -2,6 +2,14 @@ LLaMA-Factory/arpo_train_sft/dataset/*.jsonl
 LLaMA-Factory/arpo_train_sft/dataset/*.jsonl
 LLaMA-Factory/LLaMA-Factory-backup
 
+*.pyc
+*.log
+*.lock
+*.wandb
+**/__pycache__
+**/wandb
+**/.vscode
+**/verl_checkpoints
 **/checkpoints
 **/sft_checkpoints
 **/data
