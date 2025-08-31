@@ -678,5 +678,5 @@ class vLLMRolloutWithTools(vLLMRollout):
 
         return data_proto
     def update_max_calling_times(self,max_calling_times):
-        print(f"--------------------------------update max calling times from {self.config.max_calling_times} to {max_calling_times}--------------------------------")
+        print(f"--------------------------------update max calling times from {self.config.tools.call_limit} to {max_calling_times}--------------------------------")
         self.config.tools.call_limit = max_calling_times

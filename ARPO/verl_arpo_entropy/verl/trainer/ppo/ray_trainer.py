@@ -1282,13 +1282,13 @@ class RayPPOTrainer:
                     if rollout_data_dir:
                         with _timer("dump_rollout_generations", timing_raw):
                             print(batch.batch.keys())
-                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=False)
-                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=False)
+                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=True)
+                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=True)
                             #THREEGOLDCHANGE: python search dump
                             search_times = batch.non_tensor_batch.get("search_counters",None)
                             python_times = batch.non_tensor_batch.get("python_counters",None)
                             cost_dict_list = batch.non_tensor_batch.get("cost_dict",None)
-                            scores = batch.batch["token_level_scores"].sum(-1).cpu().tolist()
+                            scores = batch.batch["token_level_scores"].sum(-1).cpu().tolist() #TODO:add ground truth score
                             self._dump_generations(
                                 inputs=inputs,
                                 outputs=outputs,
