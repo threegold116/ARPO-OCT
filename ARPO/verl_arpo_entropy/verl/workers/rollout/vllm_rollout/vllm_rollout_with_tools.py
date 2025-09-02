@@ -78,7 +78,8 @@ class vLLMRolloutWithTools(vLLMRollout):
     def __init__(self, model_path: str, config: DictConfig, tokenizer, model_hf_config, **kwargs):
         super().__init__(model_path, config, tokenizer, model_hf_config, **kwargs)
         self.tokenizer = tokenizer
-
+        # if "3" in os.getenv("RAY_DEBUG_MODE","0"):
+        #     breakpoint()
         # 从配置中获取beam search相关参数
         self.initial_rollouts = self.config.get("initial_rollouts", self.config['n'])
         self.beam_size = self.config.get("beam_size", 1)
@@ -678,5 +679,5 @@ class vLLMRolloutWithTools(vLLMRollout):
 
         return data_proto
     def update_max_calling_times(self,max_calling_times):
-        print(f"--------------------------------update max calling times from {self.config.tools.call_limit} to {max_calling_times}--------------------------------")
-        self.config.tools.call_limit = max_calling_times
+        print(f"--------------------------------update max calling times from {self.tool_call_limit} to {max_calling_times}--------------------------------")
+        self.tool_call_limit = max_calling_times

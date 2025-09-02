@@ -215,6 +215,7 @@ def compute_response_mask(data: DataProto):
 def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_penalty='oct'):
     token_level_scores = data.batch['token_level_scores']
     no_positive_penalty = oct_ctrl.no_positive_penalty
+    apply_mode = getattr(oct_ctrl,"apply_mode","multiply")
     # compute the oct reward cofficent
     if oct_penalty == 'times':
         old,avg_call_times,max_calling_times = core_algos.oct_times_penalty(data,oct_smooth=oct_ctrl.smooth)  # (batch_size, response_length)
@@ -222,11 +223,9 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
         oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
         metrics = {'rollout/avg_call_times': avg_call_times,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     elif oct_penalty == 'budget':
-        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty)  # (batch_size, response_length)
+        old,avg_call_costs,max_calling_times = core_algos.oct_budget_penalty(data,oct_smooth=oct_ctrl.smooth,no_positive_penalty=no_positive_penalty,group_smooth=oct_ctrl.group_smooth)  # (batch_size, response_length)
         print(f"old: {old}")
-        if no_positive_penalty:
-            oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
-        else:#TODO:oct_ctrl.coffoicient如果不为1，对结果的影响
+        if apply_mode=="add":
             oct_token_level_scores = token_level_scores.clone()
             for idx, old_value in enumerate(old):
                 #THREEGOLDCHANGE:copy from advantage calcute 
@@ -235,12 +234,29 @@ def apply_oct_penalty(data: DataProto, oct_ctrl: core_algos.OctController, oct_p
                 valid_response_length = data[idx].batch['attention_mask'][prompt_length:].sum()
                 score = oct_token_level_scores[idx][valid_response_length - 1]
                 if torch.sum(token_level_scores[idx])> 0:
-                    oct_token_level_scores[idx][valid_response_length - 1] = score * old_value *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
-                elif torch.sum(token_level_scores[idx])==0:
+                    oct_token_level_scores[idx][valid_response_length - 1] = score + old_value *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+                elif torch.sum(token_level_scores[idx])==0 and not no_positive_penalty:
                     oct_token_level_scores[idx][valid_response_length - 1] = old_value *oct_ctrl.cofficient - 1 #(bz,response_length)*(bz,1) for last-token score
                 else:
                     pass
-                    #no penalty for format error
+        else:
+            if no_positive_penalty:
+                oct_token_level_scores = token_level_scores * old.unsqueeze(-1) *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+            else:#TODO:oct_ctrl.coffoicient如果不为1，对结果的影响
+                oct_token_level_scores = token_level_scores.clone()
+                for idx, old_value in enumerate(old):
+                    #THREEGOLDCHANGE:copy from advantage calcute 
+                    prompt_ids = data[idx].batch['prompts']
+                    prompt_length = prompt_ids.shape[-1]
+                    valid_response_length = data[idx].batch['attention_mask'][prompt_length:].sum()
+                    score = oct_token_level_scores[idx][valid_response_length - 1]
+                    if torch.sum(token_level_scores[idx])> 0:
+                        oct_token_level_scores[idx][valid_response_length - 1] = score * old_value *oct_ctrl.cofficient #(bz,response_length)*(bz,1) for last-token score
+                    elif torch.sum(token_level_scores[idx])==0:
+                        oct_token_level_scores[idx][valid_response_length - 1] = old_value *oct_ctrl.cofficient - 1 #(bz,response_length)*(bz,1) for last-token score
+                    else:
+                        pass
+                        #no penalty for format error
         metrics = {'rollout/avg_call_costs': avg_call_costs,"actor/oct_coff":oct_ctrl.cofficient,"actor/smooth":oct_ctrl.smooth,"actor/oct":torch.mean(oct_token_level_scores).item(),"rollout/max_calling_times":max_calling_times}
     else:
         raise NotImplementedError
@@ -452,7 +468,9 @@ class RayPPOTrainer:
             self.oct_ctrl = core_algos.OctController(init_cofficient=config.actor_rollout_ref.actor.oct_coef,
                                                     init_smooth=config.actor_rollout_ref.actor.oct_smooth,
                                                     no_positive_penalty=config.actor_rollout_ref.actor.no_positive_penalty,
+                                                    apply_mode=config.actor_rollout_ref.actor.apply_mode,
                                                     tokenizer=self.tokenizer)
+            print(f"Using OCT with cofficient {self.oct_ctrl.cofficient}, smooth {self.oct_ctrl.smooth}, no_positive_penalty {self.oct_ctrl.no_positive_penalty}, apply_mode {self.oct_ctrl.apply_mode}")
         #THREEGOLDCHANGE:this is oct init
         self._validate_config()
         self._create_dataloader(train_dataset, val_dataset, collate_fn, train_sampler)
@@ -635,15 +653,15 @@ class RayPPOTrainer:
         except Exception as e:
             print(f"Warning: Could not set total_training_steps in config. Structure missing? Error: {e}")
 
-    def _dump_generations(self, inputs, outputs, scores, reward_extra_infos_dict, dump_path, search_times=None, python_times=None, cost_dict_list=None):
+    def _dump_generations(self, inputs, outputs, scores, reward_extra_infos_dict, dump_path, search_times=None, python_times=None, cost_dict_list=None,groud_truth=None,ability=None):
         """Dump rollout/validation samples as JSONL."""
         os.makedirs(dump_path, exist_ok=True)
         filename = os.path.join(dump_path, f"{self.global_steps}.jsonl")
 
         n = len(inputs)
         base_data = {
-            "input": inputs,
-            "output": outputs,
+            "input": [input.replace("<|endoftext|>","") for input in inputs],
+            "output": [output.replace("<|endoftext|>","") for output in outputs],
             "score": scores,
             "step": [self.global_steps] * n,
         }
@@ -661,6 +679,10 @@ class RayPPOTrainer:
                     entry["python_times"] = python_times[i].item()
                 if cost_dict_list is not None:
                     entry["cost_dict"] = cost_dict_list[i]
+                if groud_truth is not None:
+                    entry["groud_truth"] = groud_truth[i]["ground_truth"]
+                if ability is not None:
+                    entry["ability"] = ability[i]
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
         print(f"Dumped generations to {filename}")
@@ -1282,12 +1304,14 @@ class RayPPOTrainer:
                     if rollout_data_dir:
                         with _timer("dump_rollout_generations", timing_raw):
                             print(batch.batch.keys())
-                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=True)
-                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=True)
+                            inputs = self.tokenizer.batch_decode(batch.batch["prompts"], skip_special_tokens=False)
+                            outputs = self.tokenizer.batch_decode(batch.batch["responses"], skip_special_tokens=False)
                             #THREEGOLDCHANGE: python search dump
                             search_times = batch.non_tensor_batch.get("search_counters",None)
                             python_times = batch.non_tensor_batch.get("python_counters",None)
                             cost_dict_list = batch.non_tensor_batch.get("cost_dict",None)
+                            groud_truth = batch.non_tensor_batch.get("reward_model",None)
+                            ability = batch.non_tensor_batch.get("ability",None)
                             scores = batch.batch["token_level_scores"].sum(-1).cpu().tolist() #TODO:add ground truth score
                             self._dump_generations(
                                 inputs=inputs,
@@ -1297,6 +1321,8 @@ class RayPPOTrainer:
                                 search_times=search_times,
                                 python_times=python_times,
                                 cost_dict_list=cost_dict_list,
+                                groud_truth=groud_truth,
+                                ability=ability,
                                 dump_path=rollout_data_dir,
                             )
 

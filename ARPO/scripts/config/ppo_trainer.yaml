@@ -64,6 +64,8 @@ actor_rollout_ref:
     oct_coef: 1 # for OCT(alpha)
     oct_smooth: ${actor_rollout_ref.rollout.tools.call_limit} # same with max_calling_times
     no_positive_penalty: True # True for OCT
+    apply_mode: multiply
+    group_smooth: False
     #THREEGOLDCHANGE
     ppo_epochs: 1
     shuffle: False
@@ -170,7 +172,7 @@ actor_rollout_ref:
         python:  
           class_path: verl.workers.rollout.tools.python_tool.PythonTool  # 工具类路径
           params:  # 工具特定参数
-            conda_path: /home/sxjiang/miniconda3 #THREEGOLD
+            conda_path: /share/home/sxjiang/miniconda3 #THREEGOLD
             conda_env: arpo #THREEGOLD
         
         search:

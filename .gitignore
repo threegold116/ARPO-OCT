@@ -14,3 +14,10 @@ LLaMA-Factory/LLaMA-Factory-backup
 **/sft_checkpoints
 **/data
 **/.vscode
+**/run_hit.sh
+**/*.png
+**/ARPO_7B_Reasoning_1node_hit.sh
+huggingface_checkpoints/*
+transfer_checkpoints/*
+re.md
+**/*.sh
