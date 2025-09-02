@@ -513,7 +513,8 @@ class ActorRolloutRefWorker(Worker):
     @register(dispatch_mode=Dispatch.ONE_TO_ALL)
     def init_model(self):
         from verl.workers.actor import DataParallelPPOActor
-
+        if "3" in os.getenv("RAY_DEBUG_MODE","0") and self.rank == 0:
+            breakpoint()
         # This is used to import external_lib into the huggingface systems
         import_external_libs(self.config.model.get("external_lib", None))
 

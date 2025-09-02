@@ -106,7 +106,7 @@ conda activate sft
 # Install dependencies
 pip install -r requirements.txt
 ```
-
+pip install deepspeed>=0.10.0,<=0.16.9
 ### 2. Fine-Tuning Model
 
 
@@ -185,7 +185,7 @@ conda activate arpo
 
 # install torch & flash-atten
 pip3 install torch==2.4.0 --index-url https://download.pytorch.org/whl/cu124
-pip3 install flash-attn --no-build-isolation
+pip3 install flash-attn==2.7.4.post1 --no-build-isolation
 
 # install RL basic env
 cd arpo

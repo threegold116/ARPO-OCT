@@ -10,6 +10,17 @@ LLaMA-Factory/LLaMA-Factory-backup
 **/wandb
 **/.vscode
 **/verl_checkpoints
+**/checkpoints
+**/sft_checkpoints
+**/data
+**/.vscode
+**/run_hit.sh
+**/*.png
+**/ARPO_7B_Reasoning_1node_hit.sh
+huggingface_checkpoints/*
+transfer_checkpoints/*
+re.md
+**/*.sh
 **/sft_checkpoints
 re.md
 **.sh

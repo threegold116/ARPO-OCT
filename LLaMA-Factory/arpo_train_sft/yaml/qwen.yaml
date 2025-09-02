@@ -13,15 +13,19 @@ dataset_dir: dataset_info
 dataset: final_5w4_still
 template: qwen
 cutoff_len: 4096
+cutoff_len: 4096
 max_samples: 1000000
 overwrite_cache: true
 preprocessing_num_workers: 16
+# resume_from_checkpoint: /share/home/sxjiang/myproject/ARPO-OCT/LLaMA-Factory/arpo_train_sft/checkpoints/checkpoint-600
 # resume_from_checkpoint: /share/home/sxjiang/myproject/ARPO-OCT/LLaMA-Factory/arpo_train_sft/checkpoints/checkpoint-600
 ### output
 output_dir: /share/home/zrchen/sxjiang-zr/ARPO-OCT/sft_checkpoints/Qwen2.5-7B-Instruct-arpo_final_sft_edition10-52
 logging_steps: 10
 save_steps: 100
+save_steps: 100
 plot_loss: true
+overwrite_output_dir: false
 overwrite_output_dir: false
 
 ### train
@@ -31,6 +35,7 @@ learning_rate: 7.0e-6
 num_train_epochs: 3.0
 lr_scheduler_type: cosine
 warmup_ratio: 0.1
+weight_decay: 0.1
 weight_decay: 0.1
 bf16: true
 ddp_timeout: 180000000
