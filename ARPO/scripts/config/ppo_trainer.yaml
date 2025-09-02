@@ -172,7 +172,7 @@ actor_rollout_ref:
         python:  
           class_path: verl.workers.rollout.tools.python_tool.PythonTool  # 工具类路径
           params:  # 工具特定参数
-            conda_path: /share/home/sxjiang/miniconda3 #THREEGOLD
+            conda_path: /share/home/zrchen/miniconda3 #THREEGOLD
             conda_env: arpo #THREEGOLD
         
         search:
