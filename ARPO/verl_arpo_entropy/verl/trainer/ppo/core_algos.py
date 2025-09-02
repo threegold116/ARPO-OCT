@@ -696,11 +696,16 @@ def compute_pf_ppo_reweight_data(
     return resampled_data
 
 
-def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False):
+def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=False,responses=None):
     # 1.get_strings
     tool_calling_costs = []
-    search_times = data.non_tensor_batch.get("search_counters",None)
-    python_times = data.non_tensor_batch.get("python_counters",None)
+    if responses is None:
+        search_times = data.non_tensor_batch.get("search_counters",None)
+        python_times = data.non_tensor_batch.get("python_counters",None)
+    else:
+        responses = [response.replace("<|endoftext|>","") for response in responses]
+        search_times = [response.count("<search>") for response in responses]
+        python_times = [response.count("<python>") for response in responses]
     cost_dict_list = data.non_tensor_batch.get("cost_dict",None)
     # max_calling_times = 0
     max_calling_times = 0

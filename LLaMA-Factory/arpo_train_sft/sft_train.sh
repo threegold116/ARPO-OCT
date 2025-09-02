@@ -2,7 +2,7 @@
 
 #================== Basic Configuration ==================#
 export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7  # List of visible GPUs
-export PYTHONPATH=/share/home/sxjiang/myproject/ARPO-OCT/LLaMA-Factory/src:$PYTHONPATH
+export PYTHONPATH=/share/home/zrchen/sxjiang-zr/ARPO-OCT/LLaMA-Factory/src:$PYTHONPATH
 
 # Disable Weights & Biases
 export WANDB_DISABLED=true
@@ -16,7 +16,7 @@ MASTER_ADDR="127.0.0.1"  # Address of the master node
 MASTER_PORT=29500        # Port of the master node
 
 # Output directory
-OUTPUT_DIR="/share/home/sxjiang/myproject/ARPO-OCT/sft_checkpoints/Qwen2.5-3B-Instruct-arpo_final_sft_edition10-52"
+OUTPUT_DIR="/share/home/zrchen/sxjiang-zr/ARPO-OCT/sft_checkpoints/Qwen2.5-7B-Instruct-arpo_final_sft_edition10-52"
 # Create output directory if it doesn't exist
 mkdir -p ${OUTPUT_DIR}
 

@@ -21,4 +21,9 @@ huggingface_checkpoints/*
 transfer_checkpoints/*
 re.md
 **/*.sh
+**/sft_checkpoints
+re.md
+**.sh
+**/*.json
+**/*.jsonl
 **/analyse
