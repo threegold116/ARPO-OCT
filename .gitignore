@@ -10,3 +10,8 @@ LLaMA-Factory/LLaMA-Factory-backup
 **/wandb
 **/.vscode
 **/verl_checkpoints
+**/sft_checkpoints
+re.md
+**.sh
+**/*.json
+**/*.jsonl
