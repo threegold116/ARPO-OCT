@@ -21,3 +21,4 @@ huggingface_checkpoints/*
 transfer_checkpoints/*
 re.md
 **/*.sh
+**/analyse
