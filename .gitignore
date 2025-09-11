@@ -26,3 +26,4 @@ re.md
 **.sh
 **/*.json
 **/*.jsonl
+**/analyse
