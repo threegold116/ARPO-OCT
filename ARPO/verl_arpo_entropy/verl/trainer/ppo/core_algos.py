@@ -704,8 +704,10 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=Fal
         python_times = data.non_tensor_batch.get("python_counters",None)
     else:
         responses = [response.replace("<|endoftext|>","") for response in responses]
-        search_times = [response.count("<search>") for response in responses]
-        python_times = [response.count("<python>") for response in responses]
+        search_times_1 = data.non_tensor_batch.get("search_counters",None)
+        python_times_1 = data.non_tensor_batch.get("python_counters",None) 
+        search_times = [min(response.count("<search>"),search_times_1[i]) for i,response in enumerate(responses)]
+        python_times = [min(response.count("<python>"),python_times_1[i]) for i,response in enumerate(responses)]
     cost_dict_list = data.non_tensor_batch.get("cost_dict",None)
     # max_calling_times = 0
     max_calling_times = 0
@@ -714,7 +716,6 @@ def oct_budget_penalty(data,oct_smooth,no_positive_penalty=True,group_smooth=Fal
         search_cost = cost_dict.get("search_cost",0)
         python_cost = cost_dict.get("python_cost",0)
         tool_calling_costs.append(search_cost*search_times[i]+python_cost*python_times[i])
-        max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
         max_calling_times = max(max_calling_times,search_times[i]+python_times[i])
 
     # 2.group_by_index

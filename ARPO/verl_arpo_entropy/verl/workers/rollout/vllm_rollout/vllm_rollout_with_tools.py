@@ -281,6 +281,7 @@ class vLLMRolloutWithTools(vLLMRollout):
                     detokenize=True,
                     logprobs = self.logprobs
                 ):
+                    print(self.sampling_params)
                     outputs = self.inference_engine.generate(
                         prompt_token_ids=active_prompts,
                         sampling_params=self.sampling_params,
@@ -663,6 +664,8 @@ class vLLMRolloutWithTools(vLLMRollout):
                 "attention_mask": final_attention_mask,
                 "loss_mask": loss_mask,
                 "position_ids": final_position_ids,
+                "python_counters": torch.tensor(python_counters, device=input_ids.device),
+                'search_counters': torch.tensor(search_counters, device=input_ids.device)
             }, batch_size=final_batch_size)
 
         if vllm_version in ('0.5.4', '0.6.3') and self.config.free_cache_engine:
