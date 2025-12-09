@@ -27,3 +27,4 @@ re.md
 **/*.json
 **/*.jsonl
 **/analyse
+**/huggingface_checkpoints/**
